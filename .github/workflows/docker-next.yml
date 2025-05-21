@@ -1,0 +1,15 @@
+name: CI/CD on main branch
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  comms-message-coordinator-deployment:
+    uses: decentraland/platform-actions/.github/workflows/apps-docker-next.yml@main
+    with:
+      service-name: comms-message-coordinator
+      image-name: comms-message-coordinator
+      deployment-environment: dev
+    secrets: inherit
