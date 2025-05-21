@@ -1,50 +1,105 @@
-# template-server
+# Comms Message Coordinator
 
-## Architecture
+A microservice that handles real-time message routing and validation for Decentraland's communications infrastructure. Built to operate as a LiveKit participant, it receives directed chat messages from clients, validates their community context, and re-publishes them to the appropriate recipients using `destinationIdentities`.
 
-Extension of "ports and adapters architecture", also known as "hexagonal architecture".
+## Table of Contents
 
-With this architecture, code is organized into several layers: logic, controllers, adapters, and components (ports).
+- [🌟 Features](#-features)
+- [🏗 Architecture](#-architecture)
+- [🚀 Getting Started](#-getting-started)
 
-## Application lifecycle
+  - [Prerequisites](#prerequisites)
+  - [Local Development](#local-development)
+  - [Environment Variables](#environment-variables)
 
-1. **Start application lifecycle** - Handled by [src/index.ts](src/index.ts) in only one line of code: `Lifecycle.run({ main, initComponents })`
-2. **Create components** - Handled by [src/components.ts](src/components.ts) in the function `initComponents`
-3. **Wire application & start components** - Handled by [src/service.ts](src/service.ts) in the funciton `main`.
-   1. First wire HTTP routes and other events with [controllers](#src/controllers)
-   2. Then call to `startComponents()` to initialize the components (i.e. http-listener)
+- [🧪 Testing](#-testing)
+- [🔄 CI/CD](#-cicd)
 
-The same lifecycle is also valid for tests: [test/components.ts](test/components.ts)
+## 🌟 Features
 
-## Namespaces
+- Real-time message interception and forwarding via LiveKit
+- LiveKit participant identity used as message entrypoint
+- Validation of community membership and sender legitimacy
+- Server-side resolution of `destinationIdentities`
+- Stateless client-side logic with clean separation of concerns
+- Scalable via multiple coordinator participants
 
-### src/logic
+## 🏗 Architecture
 
-Deals with pure business logic and shouldn't have side-effects or throw exceptions.
+The service acts as a participant within a LiveKit room. Clients send community messages to this service via `sendData(destinationIdentities: ["coordinator-x"])`. Upon receiving the message, the service:
 
-### src/controllers
+1. Validates sender membership against the Social Service
+2. Resolves active members of the target community
+3. Sends a new message using LiveKit’s `sendData` with the resolved destination identities
 
-The "glue" between all the other layers, orchestrating calls between pure business logic and adapters.
+Components:
 
-Controllers always receive an hydrated context containing components and parameters to call the business logic e.g:
+- **LiveKit Client**: Subscribes to and sends messages
+- **Membership Resolver**: Resolves community membership (DB/Redis/API)
+- **Validator**: Checks sender legitimacy
+- **Message Forwarder**: Publishes messages to correct users
 
-```ts
-// handler for /ping
-export async function pingHandler(context: {
-  url: URL // parameter added by http-server
-  components: AppComponents // components of the app, part of the global context
-}) {
-  components.metrics.increment("test_ping_counter")
-  return { status: 200 }
-}
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js v20+
+- LiveKit server instance and token generation access
+
+### Local Development
+
+1. Clone the repository
+
+```bash
+git clone https://github.com/decentraland/comms-message-coordinator.git
+cd comms-message-coordinator
 ```
 
-### src/adapters
+2. Install dependencies:
 
-The layer that converts external data representations into internal ones, and vice-versa. Acts as buffer to protect the service from changes in the outside world; when a data representation changes, you only need to change how the adapters deal with it.
+```bash
+yarn install
+```
 
-### src/components.ts
+3. Start the development environment:
 
-We use the components abstraction to organize our adapters (e.g. HTTP client, database client, redis client) and any other logic that needs to track mutable state or encode dependencies between stateful components. For every environment (e.g. test, e2e, prod, staging...) we have a different version of our component systems, enabling us to easily inject mocks or different implementations for different contexts.
+```bash
+docker-compose up -d
+```
 
-We make components available to incoming http and kafka handlers. For instance, the http-server handlers have access to things like the database or HTTP components, and pass them down to the controller level for general use.
+4. Run the service:
+
+```bash
+yarn dev
+```
+
+### Environment Variables
+
+```
+LIVEKIT_WS_URL=wss://your-livekit-server
+LIVEKIT_TOKEN=your-jwt-as-coordinator-identity
+```
+
+See `.env.default` for all available options.
+
+## 🧪 Testing
+
+The project uses Jest for testing. Run tests with:
+
+```bash
+yarn test
+```
+
+## 🔄 CI/CD
+
+The project uses GitHub Actions for:
+
+- Continuous Integration
+- Docker image building
+- Automated deployments to dev/prod environments
+- Dependency management with Dependabot
+
+### Deployment Environments
+
+- **Development**: Automatic deployments on main branch
+- **Production**: Manual deployments via GitHub releases
