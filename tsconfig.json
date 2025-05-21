@@ -2,6 +2,7 @@
   "compilerOptions": {
     "strict": true,
     "outDir": "dist",
+    "rootDir": "src",
     "target": "es2020",
     "module": "commonjs",
     "moduleResolution": "node",
@@ -12,9 +13,9 @@
     "noImplicitReturns": true,
     "noImplicitAny": true,
     "noImplicitThis": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true
   },
-  "include": [
-    "src"
-  ]
+  "include": ["src"]
 }
