@@ -1,5 +1,7 @@
 # Comms Message SFU
 
+[![Coverage Status](https://coveralls.io/repos/github/decentraland/comms-message-sfu/badge.svg)](https://coveralls.io/github/decentraland/comms-message-sfu)
+
 A microservice that handles real-time message routing and validation for Decentraland's communications infrastructure. Built to operate as a LiveKit participant, it receives directed chat messages from clients, validates their community context, and re-publishes them to the appropriate recipients using `destinationIdentities`.
 
 ## Table of Contents
@@ -76,7 +78,7 @@ yarn dev
 ### Environment Variables
 
 ```
-LIVEKIT_WS_URL=wss://your-livekit-server
+LIVEKIT_HOST=your-livekit-host
 LIVEKIT_API_KEY=your-livekit-api-key
 LIVEKIT_API_SECRET=your-livekit-api-secret
 LIVEKIT_ROOM_NAME=your-room-name
