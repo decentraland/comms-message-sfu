@@ -24,11 +24,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: ${{ inputs.deployment-environment }}
     steps:
-      - name: Trigger Comms Message Coordinator deployment
+      - name: Trigger Comms Message SFU deployment
         id: deploy-server
         uses: decentraland/dcl-deploy-action@main
         with:
-          dockerImage: 'quay.io/decentraland/comms-message-coordinator:${{ inputs.tag }}'
-          serviceName: 'comms-message-coordinator'
+          dockerImage: 'quay.io/decentraland/comms-message-sfu:${{ inputs.tag }}'
+          serviceName: 'comms-message-sfu'
           env: ${{ inputs.deployment-environment }}
           token: ${{ secrets.GITHUB_TOKEN }}

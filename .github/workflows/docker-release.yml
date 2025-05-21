@@ -6,10 +6,10 @@ on:
       - 'created'
 
 jobs:
-  comms-message-coordinator-deployment:
+  comms-message-sfu-deployment:
     uses: decentraland/platform-actions/.github/workflows/apps-docker-release.yml@main
     with:
-      service-name: comms-message-coordinator
-      image-name: comms-message-coordinator
+      service-name: comms-message-sfu
+      image-name: comms-message-sfu
       deployment-environment: prd
     secrets: inherit

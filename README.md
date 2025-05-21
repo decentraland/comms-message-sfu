@@ -1,4 +1,4 @@
-# Comms Message Coordinator
+# Comms Message SFU
 
 A microservice that handles real-time message routing and validation for Decentraland's communications infrastructure. Built to operate as a LiveKit participant, it receives directed chat messages from clients, validates their community context, and re-publishes them to the appropriate recipients using `destinationIdentities`.
 
@@ -22,11 +22,11 @@ A microservice that handles real-time message routing and validation for Decentr
 - Validation of community membership and sender legitimacy
 - Server-side resolution of `destinationIdentities`
 - Stateless client-side logic with clean separation of concerns
-- Scalable via multiple coordinator participants
+- Scalable via multiple service replicas
 
 ## 🏗 Architecture
 
-The service acts as a participant within a LiveKit room. Clients send community messages to this service via `sendData(destinationIdentities: ["coordinator-x"])`. Upon receiving the message, the service:
+The service acts as a participant within a LiveKit room. Clients send community messages to this service via `sendData(destinationIdentities: ["sfu-replica-x"])`. Upon receiving the message, the service:
 
 1. Validates sender membership against the Social Service
 2. Resolves active members of the target community
@@ -51,8 +51,8 @@ Components:
 1. Clone the repository
 
 ```bash
-git clone https://github.com/decentraland/comms-message-coordinator.git
-cd comms-message-coordinator
+git clone https://github.com/decentraland/comms-message-sfu.git
+cd comms-message-sfu
 ```
 
 2. Install dependencies:
@@ -77,7 +77,9 @@ yarn dev
 
 ```
 LIVEKIT_WS_URL=wss://your-livekit-server
-LIVEKIT_TOKEN=your-jwt-as-coordinator-identity
+LIVEKIT_API_KEY=your-livekit-api-key
+LIVEKIT_API_SECRET=your-livekit-api-secret
+LIVEKIT_ROOM_NAME=your-room-name
 ```
 
 See `.env.default` for all available options.
