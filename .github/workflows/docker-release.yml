@@ -1,0 +1,15 @@
+name: Publish 'latest' image
+
+on:
+  release:
+    types:
+      - 'created'
+
+jobs:
+  comms-message-sfu-deployment:
+    uses: decentraland/platform-actions/.github/workflows/apps-docker-release.yml@main
+    with:
+      service-name: comms-message-sfu
+      image-name: comms-message-sfu
+      deployment-environment: prd
+    secrets: inherit

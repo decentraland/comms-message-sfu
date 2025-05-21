@@ -1,0 +1,15 @@
+name: CI/CD on main branch
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  comms-message-sfu-deployment:
+    uses: decentraland/platform-actions/.github/workflows/apps-docker-next.yml@main
+    with:
+      service-name: comms-message-sfu
+      image-name: comms-message-sfu
+      deployment-environment: dev
+    secrets: inherit
