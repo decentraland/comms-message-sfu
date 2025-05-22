@@ -1,7 +1,7 @@
 import { IBaseComponent, START_COMPONENT, STOP_COMPONENT } from '@well-known-components/interfaces'
 import { AppComponents } from '../types'
 import { AccessToken } from 'livekit-server-sdk'
-import { DataPacketKind, RemoteParticipant, Room, RoomEvent } from '@livekit/rtc-node'
+import { Room, RoomEvent } from '@livekit/rtc-node'
 
 export type ILivekitComponent = IBaseComponent
 
