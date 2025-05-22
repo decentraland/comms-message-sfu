@@ -10,8 +10,9 @@ import { AppComponents, GlobalContext } from './types'
 import { metricDeclarations } from './metrics'
 import { createPgComponent } from '@well-known-components/pg-component'
 import { createDBComponent } from './adapters/db'
+import { createLivekitComponent } from './adapters/livekit'
+import { createMessageRouting } from './logic/message-routing'
 
-// Initialize all the components of the app
 export async function initComponents(): Promise<AppComponents> {
   const config = await createDotEnvConfigComponent({ path: ['.env.default', '.env'] })
   const metrics = await createMetricsComponent(metricDeclarations, { config })
@@ -32,7 +33,10 @@ export async function initComponents(): Promise<AppComponents> {
   }
 
   const pg = await createPgComponent({ logs, config, metrics })
-  const db = await createDBComponent({ pg, logs })
+  const db = await createDBComponent({ pg })
+
+  const messageRouting = await createMessageRouting({ db, logs })
+  const livekit = await createLivekitComponent({ config, logs, messageRouting })
 
   return {
     config,
@@ -41,6 +45,8 @@ export async function initComponents(): Promise<AppComponents> {
     statusChecks,
     metrics,
     pg,
-    db
+    db,
+    livekit,
+    messageRouting
   }
 }
