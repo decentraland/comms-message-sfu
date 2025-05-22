@@ -8,7 +8,6 @@ import {
 import { IDatabaseComponent } from '../../src/adapters/db'
 import { createTestLogsComponent } from '../mocks/components'
 import { MockRoom, mockRoom } from '../mocks/livekit'
-import { createTestMetricsComponent } from '@well-known-components/metrics'
 import { metricDeclarations } from '../../src/metrics'
 
 describe('when handling message routing', () => {
@@ -67,60 +66,58 @@ describe('when handling message routing', () => {
       expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
     })
 
+    describe('when local participant is not connected', () => {
+      let mockRoomWithLocalParticipant: MockRoom
+
+      beforeEach(() => {
+        mockRoomWithLocalParticipant = {
+          ...mockRoom,
+          localParticipant: undefined
+        }
+      })
+
+      it('should record metrics for failed delivery', async () => {
+        const message: IncomingMessage = {
+          payload: new Uint8Array([1, 2, 3]),
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoomWithLocalParticipant as any, message)
+
+        expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
+        expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+        expect(mockTimer.end).toHaveBeenCalled()
+      })
+    })
+
     describe('when community has members', () => {
       beforeEach(() => {
         mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
       })
 
-      describe('when local participant is connected', () => {
-        it('should route message and record metrics for successful delivery', async () => {
-          const message: IncomingMessage = {
-            payload: new Uint8Array([1, 2, 3]),
-            from: 'test-user',
-            communityId: 'test-community'
-          }
+      it('should route message and record metrics for successful delivery', async () => {
+        const message: IncomingMessage = {
+          payload: new Uint8Array([1, 2, 3]),
+          from: 'test-user',
+          communityId: 'test-community'
+        }
 
-          await messageRouting.routeMessage(mockRoom as any, message)
+        await messageRouting.routeMessage(mockRoom as any, message)
 
-          expect(mockDB.getCommunityMembers).toHaveBeenCalledWith('test-community', {
-            exclude: ['test-user']
-          })
-
-          expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(message.payload, {
-            destination_identities: ['user1', 'user2'],
-            topic: 'test-community'
-          })
-
-          expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
-          expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'delivered' })
-          expect(mockTimer.end).toHaveBeenCalled()
-        })
-      })
-
-      describe('when local participant is not connected', () => {
-        let mockRoomWithLocalParticipant: MockRoom
-
-        beforeEach(() => {
-          mockRoomWithLocalParticipant = {
-            ...mockRoom,
-            localParticipant: undefined
-          }
+        expect(mockDB.getCommunityMembers).toHaveBeenCalledWith('test-community', {
+          exclude: ['test-user']
         })
 
-        it('should record metrics for failed delivery', async () => {
-          const message: IncomingMessage = {
-            payload: new Uint8Array([1, 2, 3]),
-            from: 'test-user',
-            communityId: 'test-community'
-          }
-
-          await messageRouting.routeMessage(mockRoomWithLocalParticipant as any, message)
-
-          expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
-          expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
-          expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
-          expect(mockTimer.end).toHaveBeenCalled()
+        expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(message.payload, {
+          destination_identities: ['user1', 'user2'],
+          topic: 'test-community'
         })
+
+        expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'delivered' })
+        expect(mockTimer.end).toHaveBeenCalled()
       })
     })
 

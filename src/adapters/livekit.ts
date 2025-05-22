@@ -21,7 +21,7 @@ export async function createLivekitComponent(
     config.getString('REPLICA_NUMBER')
   ])
 
-  const identity = `${identityPrefix}-${replicaId}`
+  const identity = `${identityPrefix || 'message-router'}-${replicaId || '0'}`
 
   const room = new Room()
 
@@ -41,7 +41,7 @@ export async function createLivekitComponent(
   })
 
   room.on(RoomEvent.Disconnected, (reason) => {
-    logger.error('Disconnected from LiveKit room', { reason })
+    logger.warn('Disconnected from LiveKit room', { reason })
     metrics.observe('livekit_connection_status', {}, 0)
   })
 

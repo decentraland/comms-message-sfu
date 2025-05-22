@@ -21,8 +21,8 @@ export async function createDBComponent(components: Pick<AppComponents, 'pg'>): 
       exclude?: string[]
     }
   ) => {
-    const includeAddresses = options?.include?.map((address) => `'${address}'`)
-    const excludeAddresses = options?.exclude?.map((address) => `'${address}'`)
+    const includeAddresses = options?.include?.map((address) => `'${address.toLowerCase()}'`)
+    const excludeAddresses = options?.exclude?.map((address) => `'${address.toLowerCase()}'`)
 
     const query = SQL`
       SELECT LOWER(cm.address) as address FROM community_members cm

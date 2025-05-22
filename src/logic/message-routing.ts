@@ -36,6 +36,10 @@ export async function createMessageRouting(
       const { payload, from, communityId } = message
 
       try {
+        if (!room.localParticipant) {
+          throw new Error('No local participant available')
+        }
+
         const communityMembers = await db.getCommunityMembers(communityId, {
           // TODO(enhancement): include: [online users],
           exclude: [from]
@@ -43,10 +47,6 @@ export async function createMessageRouting(
 
         if (communityMembers.length === 0) {
           throw new Error('No community members found')
-        }
-
-        if (!room.localParticipant) {
-          throw new Error('No local participant available')
         }
 
         // Publish to all community members except sender
