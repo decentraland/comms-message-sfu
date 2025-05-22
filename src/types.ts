@@ -7,6 +7,8 @@ import type {
   IFetchComponent
 } from '@well-known-components/interfaces'
 import { metricDeclarations } from './metrics'
+import { IPgComponent } from '@well-known-components/pg-component'
+import { IDatabaseComponent } from './adapters/db'
 
 export type GlobalContext = {
   components: BaseComponents
@@ -23,6 +25,8 @@ export type BaseComponents = {
 // components used in runtime
 export type AppComponents = BaseComponents & {
   statusChecks: IBaseComponent
+  pg: IPgComponent
+  db: IDatabaseComponent
 }
 
 // components used in tests
