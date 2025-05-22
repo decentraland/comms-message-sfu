@@ -18,7 +18,7 @@ export async function createLivekitComponent(
     config.requireString('LIVEKIT_API_SECRET'),
     config.requireString('LIVEKIT_ROOM_NAME'),
     config.getString('LIVEKIT_IDENTITY_PREFIX'),
-    config.getString('REPLICA_ID')
+    config.getString('REPLICA_NUMBER')
   ])
 
   const identity = `${identityPrefix}-${replicaId}`
