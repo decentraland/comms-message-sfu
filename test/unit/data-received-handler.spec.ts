@@ -21,7 +21,7 @@ describe('when handling data received', () => {
       metrics: createTestMetricsComponent(metricDeclarations)
     })
 
-    handleMessage = dataReceivedHandler.handleMessage(mockRoom as any, 'test-prefix-0')
+    handleMessage = dataReceivedHandler.handle(mockRoom as any, 'test-prefix-0')
   })
 
   it('should route message when valid data is received', async () => {

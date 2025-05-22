@@ -1,14 +1,31 @@
 import { IBaseComponent, START_COMPONENT, STOP_COMPONENT } from '@well-known-components/interfaces'
 import { AppComponents } from '../types'
 import { AccessToken } from 'livekit-server-sdk'
-import { DisconnectReason, Room, RoomEvent } from '@livekit/rtc-node'
+import { Room, RoomEvent } from '@livekit/rtc-node'
 
 export type ILivekitComponent = IBaseComponent
 
 export async function createLivekitComponent(
-  components: Pick<AppComponents, 'config' | 'logs' | 'metrics' | 'dataReceivedHandler'>
+  components: Pick<
+    AppComponents,
+    | 'config'
+    | 'logs'
+    | 'dataReceivedHandler'
+    | 'connectedHandler'
+    | 'disconnectedHandler'
+    | 'reconnectingHandler'
+    | 'reconnectedHandler'
+  >
 ): Promise<ILivekitComponent> {
-  const { config, logs, metrics, dataReceivedHandler } = components
+  const {
+    config,
+    logs,
+    dataReceivedHandler,
+    connectedHandler,
+    disconnectedHandler,
+    reconnectingHandler,
+    reconnectedHandler
+  } = components
   const logger = logs.getLogger('livekit')
 
   const [host, apiKey, apiSecret, roomName, identityPrefix, replicaId] = await Promise.all([
@@ -24,12 +41,13 @@ export async function createLivekitComponent(
 
   const room = new Room()
 
-  const handleDataReceived = dataReceivedHandler.handleMessage(room, identity)
+  const handleDisconnected = disconnectedHandler.handle(connect)
+  const handleDataReceived = dataReceivedHandler.handle(room, identity)
 
   room
-    .on(RoomEvent.Connected, handleConnected)
-    .on(RoomEvent.Reconnecting, handleReconnecting)
-    .on(RoomEvent.Reconnected, handleReconnected)
+    .on(RoomEvent.Connected, connectedHandler.handle)
+    .on(RoomEvent.Reconnecting, reconnectingHandler.handle)
+    .on(RoomEvent.Reconnected, reconnectedHandler.handle)
     .on(RoomEvent.Disconnected, handleDisconnected)
     .on(RoomEvent.DataReceived, handleDataReceived)
 
@@ -55,36 +73,14 @@ export async function createLivekitComponent(
     return token.toJwt()
   }
 
-  function handleConnected() {
-    logger.info('Connected to Livekit room')
-    metrics.observe('livekit_connection_status', {}, 1)
-  }
-
-  function handleReconnecting() {
-    logger.warn('Reconnecting to Livekit room')
-    metrics.observe('livekit_connection_status', {}, 0)
-  }
-
-  function handleReconnected() {
-    logger.info('Reconnected to Livekit room')
-    metrics.observe('livekit_connection_status', {}, 1)
-  }
-
-  async function handleDisconnected(reason: DisconnectReason) {
-    logger.warn('Disconnected from Livekit room', { reason })
-    metrics.observe('livekit_connection_status', {}, 0)
-
-    await connect()
-  }
-
   async function disconnect() {
     logger.debug(`Disconnecting identity "${identity}" from Livekit room "${roomName}"`)
 
     logger.debug('Unsubscribing from Livekit room events')
     room
-      .off(RoomEvent.Connected, handleConnected)
-      .off(RoomEvent.Reconnecting, handleReconnecting)
-      .off(RoomEvent.Reconnected, handleReconnected)
+      .off(RoomEvent.Connected, connectedHandler.handle)
+      .off(RoomEvent.Reconnecting, reconnectingHandler.handle)
+      .off(RoomEvent.Reconnected, reconnectedHandler.handle)
       .off(RoomEvent.Disconnected, handleDisconnected)
       .off(RoomEvent.DataReceived, handleDataReceived)
 

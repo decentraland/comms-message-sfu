@@ -1,16 +1,25 @@
 import { START_COMPONENT, STOP_COMPONENT } from '@well-known-components/interfaces'
 import { createLivekitComponent, ILivekitComponent } from '../../src/adapters/livekit'
 import { createTestLogsComponent } from '../mocks/components'
-import { MockRemoteParticipant, mockRoom } from '../mocks/livekit'
+import { MockRemoteParticipant, mockRoom, MockRoomEvent } from '../mocks/livekit'
 import { IDataReceivedHandler } from '../../src/logic/data-received-handler'
 import { IConfigComponent } from '@well-known-components/interfaces'
 import { createConfigComponent } from '@well-known-components/env-config-provider'
-import { metricDeclarations } from '../../src/metrics'
-import { createTestMetricsComponent } from '@well-known-components/metrics'
+import {
+  IConnectedHandler,
+  IDisconnectedHandler,
+  IReconnectingHandler,
+  IReconnectedHandler
+} from '../../src/logic/connection-handlers'
 
 describe('when handling Livekit component', () => {
   let livekit: ILivekitComponent
   let mockDataReceivedHandler: jest.Mocked<IDataReceivedHandler>
+  let mockConnectedHandler: jest.Mocked<IConnectedHandler>
+  let mockDisconnectedHandler: jest.Mocked<IDisconnectedHandler>
+  let mockReconnectingHandler: jest.Mocked<IReconnectingHandler>
+  let mockReconnectedHandler: jest.Mocked<IReconnectedHandler>
+
   let dataHandler: (
     payload: Uint8Array,
     participant?: MockRemoteParticipant,
@@ -22,7 +31,19 @@ describe('when handling Livekit component', () => {
     // Create a mock handler function
     const mockHandler = jest.fn()
     mockDataReceivedHandler = {
-      handleMessage: jest.fn().mockReturnValue(mockHandler)
+      handle: jest.fn().mockReturnValue(mockHandler)
+    }
+    mockConnectedHandler = {
+      handle: jest.fn()
+    }
+    mockDisconnectedHandler = {
+      handle: jest.fn().mockReturnValue(mockHandler)
+    }
+    mockReconnectingHandler = {
+      handle: jest.fn()
+    }
+    mockReconnectedHandler = {
+      handle: jest.fn()
     }
 
     // Set up the data handler capture
@@ -49,13 +70,21 @@ describe('when handling Livekit component', () => {
       config: mockConfig,
       logs: createTestLogsComponent(),
       dataReceivedHandler: mockDataReceivedHandler,
-      metrics: createTestMetricsComponent(metricDeclarations)
+      connectedHandler: mockConnectedHandler,
+      disconnectedHandler: mockDisconnectedHandler,
+      reconnectingHandler: mockReconnectingHandler,
+      reconnectedHandler: mockReconnectedHandler
+    })
+
+    expect(mockDataReceivedHandler.handle).toHaveBeenCalledWith(mockRoom, 'test-prefix-0')
+    expect(mockDisconnectedHandler.handle).toHaveBeenCalledWith(expect.any(Function))
+
+    Object.values(MockRoomEvent).forEach((event) => {
+      expect(mockRoom.on).toHaveBeenCalledWith(event, expect.any(Function))
     })
 
     // Start the component to ensure event handlers are set up
     await livekit[START_COMPONENT]({} as any)
-
-    expect(mockDataReceivedHandler.handleMessage).toHaveBeenCalledWith(mockRoom, 'test-prefix-0')
   })
 
   describe('when starting the component', () => {
@@ -68,6 +97,10 @@ describe('when handling Livekit component', () => {
     it('should disconnect from Livekit room', async () => {
       await livekit[STOP_COMPONENT]()
       expect(mockRoom.disconnect).toHaveBeenCalled()
+
+      Object.values(MockRoomEvent).forEach((event) => {
+        expect(mockRoom.off).toHaveBeenCalledWith(event, expect.any(Function))
+      })
     })
   })
 
@@ -80,7 +113,7 @@ describe('when handling Livekit component', () => {
 
       await dataHandler(payload, participant, kind, topic)
 
-      const handler = mockDataReceivedHandler.handleMessage.mock.results[0].value
+      const handler = mockDataReceivedHandler.handle.mock.results[0].value
       expect(handler).toHaveBeenCalledWith(payload, participant, kind, topic)
     })
   })

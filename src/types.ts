@@ -12,6 +12,10 @@ import { IDatabaseComponent } from './adapters/db'
 import { ILivekitComponent } from './adapters/livekit'
 import { IMessageRoutingComponent } from './logic/message-routing'
 import { IDataReceivedHandler } from './logic/data-received-handler'
+import { IReconnectedHandler } from './logic/connection-handlers/reconnected'
+import { IConnectedHandler } from './logic/connection-handlers/connected'
+import { IDisconnectedHandler } from './logic/connection-handlers/disconnected'
+import { IReconnectingHandler } from './logic/connection-handlers/reconnecting'
 
 export type GlobalContext = {
   components: BaseComponents
@@ -33,6 +37,10 @@ export type AppComponents = BaseComponents & {
   livekit: ILivekitComponent
   messageRouting: IMessageRoutingComponent
   dataReceivedHandler: IDataReceivedHandler
+  connectedHandler: IConnectedHandler
+  disconnectedHandler: IDisconnectedHandler
+  reconnectingHandler: IReconnectingHandler
+  reconnectedHandler: IReconnectedHandler
 }
 
 // components used in tests

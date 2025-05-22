@@ -13,6 +13,10 @@ import { createDBComponent } from './adapters/db'
 import { createLivekitComponent } from './adapters/livekit'
 import { createMessageRouting } from './logic/message-routing'
 import { createDataReceivedHandler } from './logic/data-received-handler'
+import { createConnectedHandler } from './logic/connection-handlers/connected'
+import { createDisconnectedHandler } from './logic/connection-handlers/disconnected'
+import { createReconnectingHandler } from './logic/connection-handlers/reconnecting'
+import { createReconnectedHandler } from './logic/connection-handlers/reconnected'
 
 export async function initComponents(): Promise<AppComponents> {
   const config = await createDotEnvConfigComponent({ path: ['.env.default', '.env'] })
@@ -38,7 +42,21 @@ export async function initComponents(): Promise<AppComponents> {
 
   const messageRouting = await createMessageRouting({ db, logs, metrics })
   const dataReceivedHandler = await createDataReceivedHandler({ logs, messageRouting, metrics })
-  const livekit = await createLivekitComponent({ config, logs, metrics, dataReceivedHandler })
+  const connectedHandler = await createConnectedHandler({ logs, metrics })
+  const reconnectingHandler = await createReconnectingHandler({ logs, metrics })
+  const reconnectedHandler = await createReconnectedHandler({ logs, metrics })
+  const disconnectedHandler = await createDisconnectedHandler({ logs, metrics })
+
+  const livekit = await createLivekitComponent({
+    config,
+    logs,
+    dataReceivedHandler,
+    connectedHandler,
+    disconnectedHandler,
+    reconnectingHandler,
+    reconnectedHandler
+  })
+
   return {
     config,
     logs,
@@ -49,6 +67,10 @@ export async function initComponents(): Promise<AppComponents> {
     db,
     livekit,
     messageRouting,
-    dataReceivedHandler
+    dataReceivedHandler,
+    connectedHandler,
+    disconnectedHandler,
+    reconnectingHandler,
+    reconnectedHandler
   }
 }

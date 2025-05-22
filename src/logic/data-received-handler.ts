@@ -3,7 +3,7 @@ import { DataPacketKind, RemoteParticipant, Room } from '@livekit/rtc-node'
 import { fromLivekitReceivedData } from '../logic/message-routing'
 
 export type IDataReceivedHandler = {
-  handleMessage: (
+  handle: (
     room: Room,
     identity: string
   ) => (
@@ -20,7 +20,7 @@ export async function createDataReceivedHandler(
   const { logs, messageRouting } = components
   const logger = logs.getLogger('message-handler')
 
-  function handleMessage(room: Room, identity: string) {
+  function handle(room: Room, identity: string) {
     return async (
       payload: Uint8Array<ArrayBufferLike>,
       participant?: RemoteParticipant,
@@ -57,6 +57,6 @@ export async function createDataReceivedHandler(
   }
 
   return {
-    handleMessage
+    handle
   }
 }

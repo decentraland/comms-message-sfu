@@ -2,6 +2,16 @@ export type MockRemoteParticipant = {
   identity: string
 }
 
+export enum MockRoomEvent {
+  Connected = 'connected',
+  Reconnecting = 'reconnecting',
+  Reconnected = 'reconnected',
+  Disconnected = 'disconnected',
+  DataReceived = 'dataReceived'
+}
+
+export enum MockDisconnectionReason {}
+
 export type MockRoom = {
   connect: jest.Mock
   disconnect: jest.Mock
