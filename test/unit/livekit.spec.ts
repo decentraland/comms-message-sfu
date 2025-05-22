@@ -5,6 +5,8 @@ import { MockRemoteParticipant, mockRoom } from '../mocks/livekit'
 import { IMessageRoutingComponent } from '../../src/logic/message-routing'
 import { IConfigComponent } from '@well-known-components/interfaces'
 import { createConfigComponent } from '@well-known-components/env-config-provider'
+import { metricDeclarations } from '../../src/metrics'
+import { createTestMetricsComponent } from '@well-known-components/metrics'
 
 describe('when handling Livekit component', () => {
   let livekit: ILivekitComponent
@@ -44,7 +46,8 @@ describe('when handling Livekit component', () => {
     livekit = await createLivekitComponent({
       config: mockConfig,
       logs: createTestLogsComponent(),
-      messageRouting: mockMessageRouting
+      messageRouting: mockMessageRouting,
+      metrics: createTestMetricsComponent(metricDeclarations)
     })
 
     // Start the component to ensure event handlers are set up

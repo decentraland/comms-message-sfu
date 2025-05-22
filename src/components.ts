@@ -35,8 +35,8 @@ export async function initComponents(): Promise<AppComponents> {
   const pg = await createPgComponent({ logs, config, metrics })
   const db = await createDBComponent({ pg })
 
-  const messageRouting = await createMessageRouting({ db, logs })
-  const livekit = await createLivekitComponent({ config, logs, messageRouting })
+  const messageRouting = await createMessageRouting({ db, logs, metrics })
+  const livekit = await createLivekitComponent({ config, logs, messageRouting, metrics })
 
   return {
     config,

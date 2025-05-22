@@ -7,9 +7,9 @@ import { fromLivekitReceivedData } from '../logic/message-routing'
 export type ILivekitComponent = IBaseComponent
 
 export async function createLivekitComponent(
-  components: Pick<AppComponents, 'config' | 'logs' | 'messageRouting'>
+  components: Pick<AppComponents, 'config' | 'logs' | 'messageRouting' | 'metrics'>
 ): Promise<ILivekitComponent> {
-  const { config, logs, messageRouting } = components
+  const { config, logs, messageRouting, metrics } = components
   const logger = logs.getLogger('livekit')
 
   const [host, apiKey, apiSecret, roomName, identityPrefix] = await Promise.all([
@@ -24,6 +24,26 @@ export async function createLivekitComponent(
   const identity = `${identityPrefix}-${numOfServerReplica}`
 
   const room = new Room()
+
+  room.on(RoomEvent.Connected, () => {
+    logger.info('Connected to LiveKit room')
+    metrics.observe('livekit_connection_status', {}, 1)
+  })
+
+  room.on(RoomEvent.Reconnecting, () => {
+    logger.warn('Reconnecting to LiveKit room')
+    metrics.observe('livekit_connection_status', {}, 0)
+  })
+
+  room.on(RoomEvent.Reconnected, () => {
+    logger.info('Reconnected to LiveKit room')
+    metrics.observe('livekit_connection_status', {}, 1)
+  })
+
+  room.on(RoomEvent.Disconnected, (reason) => {
+    logger.error('Disconnected from LiveKit room', { reason })
+    metrics.observe('livekit_connection_status', {}, 0)
+  })
 
   room.on(RoomEvent.DataReceived, handleDataReceived)
 

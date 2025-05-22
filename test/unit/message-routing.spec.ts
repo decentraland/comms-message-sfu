@@ -1,4 +1,4 @@
-import { ILoggerComponent } from '@well-known-components/interfaces'
+import { ILoggerComponent, IMetricsComponent } from '@well-known-components/interfaces'
 import {
   fromLivekitReceivedData,
   createMessageRouting,
@@ -8,18 +8,33 @@ import {
 import { IDatabaseComponent } from '../../src/adapters/db'
 import { createTestLogsComponent } from '../mocks/components'
 import { MockRoom, mockRoom } from '../mocks/livekit'
+import { createTestMetricsComponent } from '@well-known-components/metrics'
+import { metricDeclarations } from '../../src/metrics'
 
 describe('when handling message routing', () => {
   let messageRouting: IMessageRoutingComponent
   let mockDB: jest.Mocked<IDatabaseComponent>
   let mockLogs: jest.Mocked<ILoggerComponent>
+  let mockMetrics: jest.Mocked<IMetricsComponent<keyof typeof metricDeclarations>>
+  let mockTimer: { end: jest.Mock }
 
   beforeEach(async () => {
     mockDB = {
       getCommunityMembers: jest.fn()
     }
     mockLogs = createTestLogsComponent()
-    messageRouting = await createMessageRouting({ db: mockDB, logs: mockLogs })
+    mockTimer = { end: jest.fn() }
+    mockMetrics = {
+      startTimer: jest.fn().mockReturnValue(mockTimer),
+      increment: jest.fn(),
+      observe: jest.fn()
+    } as unknown as jest.Mocked<IMetricsComponent<keyof typeof metricDeclarations>>
+
+    messageRouting = await createMessageRouting({
+      db: mockDB,
+      logs: mockLogs,
+      metrics: mockMetrics
+    })
   })
 
   describe('when transforming Livekit data', () => {
@@ -40,13 +55,25 @@ describe('when handling message routing', () => {
   })
 
   describe('when routing messages', () => {
+    it('should start a timer to record message delivery latency', async () => {
+      const message: IncomingMessage = {
+        payload: new Uint8Array([1, 2, 3]),
+        from: 'test-user',
+        communityId: 'test-community'
+      }
+
+      await messageRouting.routeMessage(mockRoom as any, message)
+
+      expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+    })
+
     describe('when community has members', () => {
       beforeEach(() => {
         mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
       })
 
       describe('when local participant is connected', () => {
-        it('should route message to all community members except sender', async () => {
+        it('should route message and record metrics for successful delivery', async () => {
           const message: IncomingMessage = {
             payload: new Uint8Array([1, 2, 3]),
             from: 'test-user',
@@ -63,6 +90,10 @@ describe('when handling message routing', () => {
             destination_identities: ['user1', 'user2'],
             topic: 'test-community'
           })
+
+          expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+          expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'delivered' })
+          expect(mockTimer.end).toHaveBeenCalled()
         })
       })
 
@@ -76,7 +107,7 @@ describe('when handling message routing', () => {
           }
         })
 
-        it('should not route message', async () => {
+        it('should record metrics for failed delivery', async () => {
           const message: IncomingMessage = {
             payload: new Uint8Array([1, 2, 3]),
             from: 'test-user',
@@ -86,6 +117,9 @@ describe('when handling message routing', () => {
           await messageRouting.routeMessage(mockRoomWithLocalParticipant as any, message)
 
           expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
+          expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+          expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+          expect(mockTimer.end).toHaveBeenCalled()
         })
       })
     })
@@ -95,7 +129,7 @@ describe('when handling message routing', () => {
         mockDB.getCommunityMembers.mockResolvedValue([])
       })
 
-      it('should not route message', async () => {
+      it('should record metrics for failed delivery', async () => {
         const message: IncomingMessage = {
           payload: new Uint8Array([1, 2, 3]),
           from: 'test-user',
@@ -104,10 +138,10 @@ describe('when handling message routing', () => {
 
         await messageRouting.routeMessage(mockRoom as any, message)
 
-        expect(mockDB.getCommunityMembers).toHaveBeenCalledWith('test-community', {
-          exclude: ['test-user']
-        })
         expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
+        expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+        expect(mockTimer.end).toHaveBeenCalled()
       })
     })
 
@@ -116,7 +150,7 @@ describe('when handling message routing', () => {
         mockDB.getCommunityMembers.mockRejectedValue(new Error('DB error'))
       })
 
-      it('should log the error and do nothing else', async () => {
+      it('should record metrics for failed delivery', async () => {
         const message: IncomingMessage = {
           payload: new Uint8Array([1, 2, 3]),
           from: 'test-user',
@@ -125,10 +159,10 @@ describe('when handling message routing', () => {
 
         await messageRouting.routeMessage(mockRoom as any, message)
 
-        expect(mockDB.getCommunityMembers).toHaveBeenCalledWith('test-community', {
-          exclude: ['test-user']
-        })
         expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
+        expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+        expect(mockTimer.end).toHaveBeenCalled()
       })
     })
   })

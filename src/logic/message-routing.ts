@@ -25,13 +25,14 @@ export type IMessageRoutingComponent = {
 }
 
 export async function createMessageRouting(
-  components: Pick<AppComponents, 'db' | 'logs'>
+  components: Pick<AppComponents, 'db' | 'logs' | 'metrics'>
 ): Promise<IMessageRoutingComponent> {
-  const { db, logs } = components
+  const { db, logs, metrics } = components
   const logger = logs.getLogger('message-routing')
 
   return {
     async routeMessage(room: Room, message: IncomingMessage) {
+      const messageDeliveryLatencyTimer = metrics.startTimer('message_delivery_latency')
       const { payload, from, communityId } = message
 
       try {
@@ -41,13 +42,11 @@ export async function createMessageRouting(
         })
 
         if (communityMembers.length === 0) {
-          logger.warn('No community members found')
-          return
+          throw new Error('No community members found')
         }
 
         if (!room.localParticipant) {
-          logger.error('No local participant available')
-          return
+          throw new Error('No local participant available')
         }
 
         // Publish to all community members except sender
@@ -55,9 +54,14 @@ export async function createMessageRouting(
           destination_identities: communityMembers,
           topic: communityId
         })
+
+        metrics.increment('message_delivery_total', { outcome: 'delivered' })
       } catch (error: any) {
         logger.error('Error routing message', { error: error.message, communityId, from })
+        metrics.increment('message_delivery_total', { outcome: 'failed' })
         return
+      } finally {
+        messageDeliveryLatencyTimer.end()
       }
     }
   }
