@@ -36,6 +36,8 @@ export async function createDBComponent(components: Pick<AppComponents, 'pg'>): 
       query.append(` AND cm.address NOT IN (${excludeAddresses.join(',')})`)
     }
 
+    // TODO: Filter kicked and banned addresses
+
     const result = await pg.query(query)
     return result.rows.map((row) => row.address)
   }
