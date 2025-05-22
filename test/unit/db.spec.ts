@@ -11,10 +11,6 @@ describe('when handling database component', () => {
     db = await createDBComponent({ pg: mockPg })
   })
 
-  afterEach(() => {
-    jest.clearAllMocks()
-  })
-
   describe('when getting community members', () => {
     it('should return all members for a community', async () => {
       const communityId = 'test-community'

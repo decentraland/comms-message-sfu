@@ -19,9 +19,6 @@ describe('when handling Livekit component', () => {
   ) => Promise<void>
 
   beforeEach(async () => {
-    // Reset all mocks
-    jest.clearAllMocks()
-
     // Create a mock handler function
     const mockHandler = jest.fn()
     mockDataReceivedHandler = {

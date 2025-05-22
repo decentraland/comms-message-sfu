@@ -1,7 +1,7 @@
 import { IBaseComponent, START_COMPONENT, STOP_COMPONENT } from '@well-known-components/interfaces'
 import { AppComponents } from '../types'
 import { AccessToken } from 'livekit-server-sdk'
-import { Room, RoomEvent } from '@livekit/rtc-node'
+import { DisconnectReason, Room, RoomEvent } from '@livekit/rtc-node'
 
 export type ILivekitComponent = IBaseComponent
 
@@ -24,27 +24,21 @@ export async function createLivekitComponent(
 
   const room = new Room()
 
-  room.on(RoomEvent.Connected, () => {
-    logger.info('Connected to LiveKit room')
-    metrics.observe('livekit_connection_status', {}, 1)
-  })
+  const handleDataReceived = dataReceivedHandler.handleMessage(room, identity)
 
-  room.on(RoomEvent.Reconnecting, () => {
-    logger.warn('Reconnecting to LiveKit room')
-    metrics.observe('livekit_connection_status', {}, 0)
-  })
+  room
+    .on(RoomEvent.Connected, handleConnected)
+    .on(RoomEvent.Reconnecting, handleReconnecting)
+    .on(RoomEvent.Reconnected, handleReconnected)
+    .on(RoomEvent.Disconnected, handleDisconnected)
+    .on(RoomEvent.DataReceived, handleDataReceived)
 
-  room.on(RoomEvent.Reconnected, () => {
-    logger.info('Reconnected to LiveKit room')
-    metrics.observe('livekit_connection_status', {}, 1)
-  })
-
-  room.on(RoomEvent.Disconnected, (reason) => {
-    logger.warn('Disconnected from LiveKit room', { reason })
-    metrics.observe('livekit_connection_status', {}, 0)
-  })
-
-  room.on(RoomEvent.DataReceived, dataReceivedHandler.handleMessage(room, identity))
+  async function connect() {
+    logger.debug(`Connecting identity "${identity}" to Livekit room "${roomName}"`)
+    const token = await getToken()
+    await room.connect(host, token)
+    logger.debug('Connected to Livekit room')
+  }
 
   async function getToken() {
     const token = new AccessToken(apiKey, apiSecret, {
@@ -61,17 +55,45 @@ export async function createLivekitComponent(
     return token.toJwt()
   }
 
+  function handleConnected() {
+    logger.info('Connected to Livekit room')
+    metrics.observe('livekit_connection_status', {}, 1)
+  }
+
+  function handleReconnecting() {
+    logger.warn('Reconnecting to Livekit room')
+    metrics.observe('livekit_connection_status', {}, 0)
+  }
+
+  function handleReconnected() {
+    logger.info('Reconnected to Livekit room')
+    metrics.observe('livekit_connection_status', {}, 1)
+  }
+
+  async function handleDisconnected(reason: DisconnectReason) {
+    logger.warn('Disconnected from Livekit room', { reason })
+    metrics.observe('livekit_connection_status', {}, 0)
+
+    await connect()
+  }
+
+  async function disconnect() {
+    logger.debug(`Disconnecting identity "${identity}" from Livekit room "${roomName}"`)
+
+    logger.debug('Unsubscribing from Livekit room events')
+    room
+      .off(RoomEvent.Connected, handleConnected)
+      .off(RoomEvent.Reconnecting, handleReconnecting)
+      .off(RoomEvent.Reconnected, handleReconnected)
+      .off(RoomEvent.Disconnected, handleDisconnected)
+      .off(RoomEvent.DataReceived, handleDataReceived)
+
+    await room.disconnect()
+    logger.debug('Disconnected from Livekit room')
+  }
+
   return {
-    [START_COMPONENT]: async () => {
-      logger.debug(`Connecting identity "${identity}" to Livekit room "${roomName}"`)
-      const token = await getToken()
-      await room.connect(host, token)
-      logger.debug('Connected to Livekit room')
-    },
-    [STOP_COMPONENT]: async () => {
-      logger.info(`Disconnecting identity "${identity}" from Livekit room "${roomName}"`)
-      await room.disconnect()
-      logger.info('Disconnected from Livekit room')
-    }
+    [START_COMPONENT]: connect,
+    [STOP_COMPONENT]: disconnect
   }
 }

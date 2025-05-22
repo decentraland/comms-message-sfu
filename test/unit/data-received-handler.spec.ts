@@ -13,8 +13,6 @@ describe('when handling data received', () => {
   let handleMessage: (payload: Uint8Array, participant?: any, kind?: number, topic?: string) => Promise<void>
 
   beforeEach(async () => {
-    jest.clearAllMocks()
-
     mockMessageRouting = createTestMessageRoutingComponent()
 
     dataReceivedHandler = await createDataReceivedHandler({

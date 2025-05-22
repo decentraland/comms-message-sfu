@@ -4,7 +4,11 @@ import { mockRoom } from './mocks/livekit'
 jest.mock('@livekit/rtc-node', () => ({
   Room: jest.fn().mockImplementation(() => mockRoom),
   RoomEvent: {
-    DataReceived: 'dataReceived'
+    DataReceived: 'dataReceived',
+    Connected: 'connected',
+    Reconnecting: 'reconnecting',
+    Reconnected: 'reconnected',
+    Disconnected: 'disconnected'
   },
   DataPacketKind: {
     KIND_LOSSY: 1,
@@ -12,6 +16,6 @@ jest.mock('@livekit/rtc-node', () => ({
   }
 }))
 
-afterEach(() => {
+beforeEach(() => {
   jest.clearAllMocks()
 })
