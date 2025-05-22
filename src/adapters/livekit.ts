@@ -12,16 +12,16 @@ export async function createLivekitComponent(
   const { config, logs, messageRouting, metrics } = components
   const logger = logs.getLogger('livekit')
 
-  const [host, apiKey, apiSecret, roomName, identityPrefix] = await Promise.all([
+  const [host, apiKey, apiSecret, roomName, identityPrefix, replicaId] = await Promise.all([
     config.requireString('LIVEKIT_HOST'),
     config.requireString('LIVEKIT_API_KEY'),
     config.requireString('LIVEKIT_API_SECRET'),
     config.requireString('LIVEKIT_ROOM_NAME'),
-    config.getString('LIVEKIT_IDENTITY_PREFIX')
+    config.getString('LIVEKIT_IDENTITY_PREFIX'),
+    config.getString('REPLICA_ID')
   ])
 
-  const numOfServerReplica = 0
-  const identity = `${identityPrefix}-${numOfServerReplica}`
+  const identity = `${identityPrefix}-${replicaId}`
 
   const room = new Room()
 

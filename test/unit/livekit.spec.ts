@@ -39,7 +39,8 @@ describe('when handling Livekit component', () => {
         LIVEKIT_API_KEY: 'test-key',
         LIVEKIT_API_SECRET: 'test-secret',
         LIVEKIT_ROOM_NAME: 'test-room',
-        LIVEKIT_IDENTITY_PREFIX: 'test-prefix'
+        LIVEKIT_IDENTITY_PREFIX: 'test-prefix',
+        REPLICA_ID: '0'
       }
     )
 
