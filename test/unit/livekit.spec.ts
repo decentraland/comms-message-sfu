@@ -1,8 +1,8 @@
 import { START_COMPONENT, STOP_COMPONENT } from '@well-known-components/interfaces'
 import { createLivekitComponent, ILivekitComponent } from '../../src/adapters/livekit'
-import { createTestLogsComponent, createTestMessageRoutingComponent } from '../mocks/components'
+import { createTestLogsComponent } from '../mocks/components'
 import { MockRemoteParticipant, mockRoom } from '../mocks/livekit'
-import { IMessageRoutingComponent } from '../../src/logic/message-routing'
+import { IDataReceivedHandler } from '../../src/logic/data-received-handler'
 import { IConfigComponent } from '@well-known-components/interfaces'
 import { createConfigComponent } from '@well-known-components/env-config-provider'
 import { metricDeclarations } from '../../src/metrics'
@@ -10,7 +10,7 @@ import { createTestMetricsComponent } from '@well-known-components/metrics'
 
 describe('when handling Livekit component', () => {
   let livekit: ILivekitComponent
-  let mockMessageRouting: jest.Mocked<IMessageRoutingComponent>
+  let mockDataReceivedHandler: jest.Mocked<IDataReceivedHandler>
   let dataHandler: (
     payload: Uint8Array,
     participant?: MockRemoteParticipant,
@@ -22,6 +22,12 @@ describe('when handling Livekit component', () => {
     // Reset all mocks
     jest.clearAllMocks()
 
+    // Create a mock handler function
+    const mockHandler = jest.fn()
+    mockDataReceivedHandler = {
+      handleMessage: jest.fn().mockReturnValue(mockHandler)
+    }
+
     // Set up the data handler capture
     mockRoom.on.mockImplementation((event, handler) => {
       if (event === 'dataReceived') {
@@ -29,8 +35,6 @@ describe('when handling Livekit component', () => {
       }
       return mockRoom
     })
-
-    mockMessageRouting = createTestMessageRoutingComponent()
 
     const mockConfig: IConfigComponent = createConfigComponent(
       {},
@@ -47,12 +51,14 @@ describe('when handling Livekit component', () => {
     livekit = await createLivekitComponent({
       config: mockConfig,
       logs: createTestLogsComponent(),
-      messageRouting: mockMessageRouting,
+      dataReceivedHandler: mockDataReceivedHandler,
       metrics: createTestMetricsComponent(metricDeclarations)
     })
 
     // Start the component to ensure event handlers are set up
     await livekit[START_COMPONENT]({} as any)
+
+    expect(mockDataReceivedHandler.handleMessage).toHaveBeenCalledWith(mockRoom, 'test-prefix-0')
   })
 
   describe('when starting the component', () => {
@@ -69,7 +75,7 @@ describe('when handling Livekit component', () => {
   })
 
   describe('when receiving data', () => {
-    it('should route message when valid data is received', async () => {
+    it('should handle data from Livekit', async () => {
       const payload = new Uint8Array([1, 2, 3])
       const participant: MockRemoteParticipant = { identity: 'test-user' }
       const kind = 1 // KIND_LOSSY
@@ -77,55 +83,8 @@ describe('when handling Livekit component', () => {
 
       await dataHandler(payload, participant, kind, topic)
 
-      expect(mockMessageRouting.routeMessage).toHaveBeenCalledWith(
-        mockRoom,
-        expect.objectContaining({
-          payload,
-          from: 'test-user',
-          communityId: 'test-community'
-        })
-      )
-    })
-
-    it('should not route message when participant is missing', async () => {
-      const payload = new Uint8Array([1, 2, 3])
-      const kind = 1 // KIND_LOSSY
-      const topic = 'test-community'
-
-      await dataHandler(payload, undefined, kind, topic)
-
-      expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
-    })
-
-    it('should not route message when topic is missing', async () => {
-      const payload = new Uint8Array([1, 2, 3])
-      const participant: MockRemoteParticipant = { identity: 'test-user' }
-      const kind = 1 // KIND_LOSSY
-
-      await dataHandler(payload, participant, kind, undefined)
-
-      expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
-    })
-
-    it('should not route message when kind is missing', async () => {
-      const payload = new Uint8Array([1, 2, 3])
-      const participant: MockRemoteParticipant = { identity: 'test-user' }
-      const topic = 'test-community'
-
-      await dataHandler(payload, participant, undefined, topic)
-
-      expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
-    })
-
-    it('should not route message when received from self', async () => {
-      const payload = new Uint8Array([1, 2, 3])
-      const participant: MockRemoteParticipant = { identity: 'test-prefix-0' }
-      const kind = 1 // KIND_LOSSY
-      const topic = 'test-community'
-
-      await dataHandler(payload, participant, kind, topic)
-
-      expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
+      const handler = mockDataReceivedHandler.handleMessage.mock.results[0].value
+      expect(handler).toHaveBeenCalledWith(payload, participant, kind, topic)
     })
   })
 })

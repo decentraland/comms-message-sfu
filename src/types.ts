@@ -11,6 +11,7 @@ import { IPgComponent } from '@well-known-components/pg-component'
 import { IDatabaseComponent } from './adapters/db'
 import { ILivekitComponent } from './adapters/livekit'
 import { IMessageRoutingComponent } from './logic/message-routing'
+import { IDataReceivedHandler } from './logic/data-received-handler'
 
 export type GlobalContext = {
   components: BaseComponents
@@ -31,6 +32,7 @@ export type AppComponents = BaseComponents & {
   db: IDatabaseComponent
   livekit: ILivekitComponent
   messageRouting: IMessageRoutingComponent
+  dataReceivedHandler: IDataReceivedHandler
 }
 
 // components used in tests

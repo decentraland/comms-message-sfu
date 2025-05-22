@@ -2,14 +2,13 @@ import { IBaseComponent, START_COMPONENT, STOP_COMPONENT } from '@well-known-com
 import { AppComponents } from '../types'
 import { AccessToken } from 'livekit-server-sdk'
 import { DataPacketKind, RemoteParticipant, Room, RoomEvent } from '@livekit/rtc-node'
-import { fromLivekitReceivedData } from '../logic/message-routing'
 
 export type ILivekitComponent = IBaseComponent
 
 export async function createLivekitComponent(
-  components: Pick<AppComponents, 'config' | 'logs' | 'messageRouting' | 'metrics'>
+  components: Pick<AppComponents, 'config' | 'logs' | 'metrics' | 'dataReceivedHandler'>
 ): Promise<ILivekitComponent> {
-  const { config, logs, messageRouting, metrics } = components
+  const { config, logs, metrics, dataReceivedHandler } = components
   const logger = logs.getLogger('livekit')
 
   const [host, apiKey, apiSecret, roomName, identityPrefix, replicaId] = await Promise.all([
@@ -45,7 +44,7 @@ export async function createLivekitComponent(
     metrics.observe('livekit_connection_status', {}, 0)
   })
 
-  room.on(RoomEvent.DataReceived, handleDataReceived)
+  room.on(RoomEvent.DataReceived, dataReceivedHandler.handleMessage(room, identity))
 
   async function getToken() {
     const token = new AccessToken(apiKey, apiSecret, {
@@ -60,40 +59,6 @@ export async function createLivekitComponent(
       hidden: true
     })
     return token.toJwt()
-  }
-
-  async function handleDataReceived(
-    payload: Uint8Array<ArrayBufferLike>,
-    participant?: RemoteParticipant | undefined,
-    kind?: DataPacketKind | undefined,
-    topic?: string | undefined
-  ) {
-    if (!participant) {
-      logger.error('No participant provided')
-      return
-    } else if (participant.identity === identity) {
-      logger.warn('Received data from self')
-      return
-    }
-
-    if (kind === undefined) {
-      logger.error('No kind provided')
-      return
-    }
-
-    if (!topic) {
-      logger.error('No community id provided in the topic')
-      return
-    }
-
-    logger.debug('Received data from Livekit room', {
-      from: participant.identity,
-      kind,
-      topic
-    })
-
-    const message = fromLivekitReceivedData(payload, participant, kind, topic)
-    await messageRouting.routeMessage(room, message)
   }
 
   return {

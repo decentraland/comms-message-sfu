@@ -12,6 +12,7 @@ import { createPgComponent } from '@well-known-components/pg-component'
 import { createDBComponent } from './adapters/db'
 import { createLivekitComponent } from './adapters/livekit'
 import { createMessageRouting } from './logic/message-routing'
+import { createDataReceivedHandler } from './logic/data-received-handler'
 
 export async function initComponents(): Promise<AppComponents> {
   const config = await createDotEnvConfigComponent({ path: ['.env.default', '.env'] })
@@ -36,8 +37,8 @@ export async function initComponents(): Promise<AppComponents> {
   const db = await createDBComponent({ pg })
 
   const messageRouting = await createMessageRouting({ db, logs, metrics })
-  const livekit = await createLivekitComponent({ config, logs, messageRouting, metrics })
-
+  const dataReceivedHandler = await createDataReceivedHandler({ logs, messageRouting, metrics })
+  const livekit = await createLivekitComponent({ config, logs, metrics, dataReceivedHandler })
   return {
     config,
     logs,
@@ -47,6 +48,7 @@ export async function initComponents(): Promise<AppComponents> {
     pg,
     db,
     livekit,
-    messageRouting
+    messageRouting,
+    dataReceivedHandler
   }
 }

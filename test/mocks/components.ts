@@ -2,6 +2,7 @@ import { ILoggerComponent } from '@well-known-components/interfaces'
 import { IPgComponent } from '@well-known-components/pg-component'
 import { IDatabaseComponent } from '../../src/adapters/db'
 import { IMessageRoutingComponent } from '../../src/logic/message-routing'
+import { IDataReceivedHandler } from '../../src/logic/data-received-handler'
 
 export function createTestDBComponent(): jest.Mocked<IDatabaseComponent> {
   return {
@@ -24,6 +25,12 @@ export function createTestLogsComponent(): jest.Mocked<ILoggerComponent> {
 export function createTestMessageRoutingComponent(): jest.Mocked<IMessageRoutingComponent> {
   return {
     routeMessage: jest.fn()
+  }
+}
+
+export function createTestDataReceivedHandlerComponent(): jest.Mocked<IDataReceivedHandler> {
+  return {
+    handleMessage: jest.fn()
   }
 }
 
