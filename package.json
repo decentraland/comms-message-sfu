@@ -24,7 +24,7 @@
   },
   "dependencies": {
     "@dcl/eslint-config": "^2.2.1",
-    "@livekit/rtc-node": "^0.13.13",
+    "@livekit/rtc-node": "^0.13.14",
     "@well-known-components/env-config-provider": "^1.2.0",
     "@well-known-components/http-server": "^2.1.0",
     "@well-known-components/interfaces": "^1.5.1",
