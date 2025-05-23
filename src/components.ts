@@ -10,8 +10,14 @@ import { AppComponents, GlobalContext } from './types'
 import { metricDeclarations } from './metrics'
 import { createPgComponent } from '@well-known-components/pg-component'
 import { createDBComponent } from './adapters/db'
+import { createLivekitComponent } from './adapters/livekit'
+import { createMessageRouting } from './logic/message-routing'
+import { createDataReceivedHandler } from './logic/data-received-handler'
+import { createConnectedHandler } from './logic/connection-handlers/connected'
+import { createDisconnectedHandler } from './logic/connection-handlers/disconnected'
+import { createReconnectingHandler } from './logic/connection-handlers/reconnecting'
+import { createReconnectedHandler } from './logic/connection-handlers/reconnected'
 
-// Initialize all the components of the app
 export async function initComponents(): Promise<AppComponents> {
   const config = await createDotEnvConfigComponent({ path: ['.env.default', '.env'] })
   const metrics = await createMetricsComponent(metricDeclarations, { config })
@@ -32,7 +38,24 @@ export async function initComponents(): Promise<AppComponents> {
   }
 
   const pg = await createPgComponent({ logs, config, metrics })
-  const db = await createDBComponent({ pg, logs })
+  const db = await createDBComponent({ pg })
+
+  const messageRouting = await createMessageRouting({ db, logs, metrics })
+  const dataReceivedHandler = await createDataReceivedHandler({ logs, messageRouting, metrics })
+  const connectedHandler = await createConnectedHandler({ logs, metrics })
+  const reconnectingHandler = await createReconnectingHandler({ logs, metrics })
+  const reconnectedHandler = await createReconnectedHandler({ logs, metrics })
+  const disconnectedHandler = await createDisconnectedHandler({ logs, metrics })
+
+  const livekit = await createLivekitComponent({
+    config,
+    logs,
+    dataReceivedHandler,
+    connectedHandler,
+    disconnectedHandler,
+    reconnectingHandler,
+    reconnectedHandler
+  })
 
   return {
     config,
@@ -41,6 +64,13 @@ export async function initComponents(): Promise<AppComponents> {
     statusChecks,
     metrics,
     pg,
-    db
+    db,
+    livekit,
+    messageRouting,
+    dataReceivedHandler,
+    connectedHandler,
+    disconnectedHandler,
+    reconnectingHandler,
+    reconnectedHandler
   }
 }

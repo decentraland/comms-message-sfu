@@ -6,10 +6,20 @@ import { metricDeclarations as logsMetricsDeclarations } from '@well-known-compo
 export const metricDeclarations = {
   ...getDefaultHttpMetrics(),
   ...logsMetricsDeclarations,
-  test_ping_counter: {
-    help: 'Count calls to ping',
+  message_delivery_latency: {
+    type: IMetricsComponent.HistogramType,
+    help: 'Time taken to deliver a message in milliseconds',
+    labelNames: []
+  },
+  message_delivery_total: {
     type: IMetricsComponent.CounterType,
-    labelNames: ['pathname']
+    help: 'Total number of messages processed',
+    labelNames: ['outcome'] // delivered, failed
+  },
+  livekit_connection_status: {
+    type: IMetricsComponent.GaugeType,
+    help: 'Current connection status to LiveKit (1 = connected, 0 = disconnected)',
+    labelNames: []
   }
 }
 
