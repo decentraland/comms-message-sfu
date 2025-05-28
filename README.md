@@ -38,12 +38,12 @@ The service acts as a participant within a LiveKit room. Clients send community 
 sequenceDiagram
     participant UnityClient as Unity Client
     participant LiveKit as LiveKit Room
-    participant Authority as Authoritative Server<br/>(LiveKit Participant)
+    participant SFU as Comms Message SFU
 
-    UnityClient->>LiveKit: sendData(destinationIdentities: [\"authority-1\"], topic: \"community:123\", content)
-    LiveKit-->>Authority: Message delivered to authority-1
-    Authority->>Authority: Validate sender & resolve community members
-    Authority->>LiveKit: sendData(destinationIdentities: [\"user-a\", \"user-b\", ...])
+    UnityClient->>LiveKit: sendData(destinationIdentities: ["comms-message-sfu-1"], topic: "community:community-id", content)
+    LiveKit-->>SFU: Message delivered to comms-message-sfu-1
+    SFU->>SFU: Validate sender & resolve community members
+    SFU->>LiveKit: sendData(destinationIdentities: ["user-a", "user-b", ...])
     LiveKit-->>UnityClient: Display message in community chat
 ```
 
