@@ -1,10 +1,14 @@
-
 FROM node:22-alpine AS builderenv
 
 WORKDIR /app
 
-# some packages require a build step
-RUN apk update && apk add --no-cache wget
+# Install build dependencies for LiveKit
+RUN apk update && apk add --no-cache \
+    wget \
+    python3 \
+    make \
+    g++ \
+    libc6-compat
 
 # build the app
 COPY . /app
@@ -18,7 +22,11 @@ RUN yarn install --prod --frozen-lockfile
 
 FROM node:22-alpine
 
-RUN apk update && apk add --update wget && apk add --update tini
+# Install runtime dependencies for LiveKit
+RUN apk update && apk add --no-cache \
+    wget \
+    tini \
+    libc6-compat
 
 # NODE_ENV is used to configure some runtime options, like JSON logger
 ENV NODE_ENV=production
