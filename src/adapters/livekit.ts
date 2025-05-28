@@ -32,7 +32,7 @@ export async function createLivekitComponent(
     config.requireString('LIVEKIT_HOST'),
     config.requireString('LIVEKIT_API_KEY'),
     config.requireString('LIVEKIT_API_SECRET'),
-    config.requireString('LIVEKIT_ROOM_NAME'),
+    config.requireString('LIVEKIT_ROOM_ID'),
     config.getString('LIVEKIT_IDENTITY_PREFIX'),
     config.getString('REPLICA_NUMBER')
   ])

@@ -60,7 +60,7 @@ describe('when handling Livekit component', () => {
         LIVEKIT_HOST: 'ws://test-host',
         LIVEKIT_API_KEY: 'test-key',
         LIVEKIT_API_SECRET: 'test-secret',
-        LIVEKIT_ROOM_NAME: 'test-room',
+        LIVEKIT_ROOM_ID: 'test-room',
         LIVEKIT_IDENTITY_PREFIX: 'test-prefix',
         REPLICA_NUMBER: '0'
       }
