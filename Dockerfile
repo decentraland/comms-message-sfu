@@ -2,7 +2,6 @@ FROM node:22-alpine AS builderenv
 
 WORKDIR /app
 
-# Install build dependencies for LiveKit
 RUN apk update && apk add --no-cache \
     wget \
     python3 \
@@ -22,7 +21,6 @@ RUN yarn install --prod --frozen-lockfile
 
 FROM node:22-alpine
 
-# Install runtime dependencies for LiveKit
 RUN apk update && apk add --no-cache \
     wget \
     tini \
