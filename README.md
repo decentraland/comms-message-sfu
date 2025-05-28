@@ -34,6 +34,19 @@ The service acts as a participant within a LiveKit room. Clients send community 
 2. Resolves active members of the target community
 3. Sends a new message using LiveKit’s `sendData` with the resolved destination identities
 
+```mermaid
+sequenceDiagram
+    participant UnityClient as Unity Client
+    participant LiveKit as LiveKit Room
+    participant Authority as Authoritative Server<br/>(LiveKit Participant)
+
+    UnityClient->>LiveKit: sendData(destinationIdentities: [\"authority-1\"], topic: \"community:123\", content)
+    LiveKit-->>Authority: Message delivered to authority-1
+    Authority->>Authority: Validate sender & resolve community members
+    Authority->>LiveKit: sendData(destinationIdentities: [\"user-a\", \"user-b\", ...])
+    LiveKit-->>UnityClient: Display message in community chat
+```
+
 Components:
 
 - **LiveKit Client**: Subscribes to and sends messages
