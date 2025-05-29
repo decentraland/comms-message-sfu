@@ -41,8 +41,10 @@ export async function createLivekitComponent(
 
   const room = new Room()
 
-  const handleDisconnected = disconnectedHandler.handle(connect)
+  let isConnecting = false
+
   const handleDataReceived = dataReceivedHandler.handle(room, identity)
+  const handleDisconnected = disconnectedHandler.handle(connect)
 
   room
     .on(RoomEvent.Connected, connectedHandler.handle)
@@ -52,10 +54,21 @@ export async function createLivekitComponent(
     .on(RoomEvent.DataReceived, handleDataReceived)
 
   async function connect() {
-    logger.debug(`Connecting identity "${identity}" to Livekit room "${roomName}"`)
-    const token = await getToken()
-    await room.connect(host, token)
-    logger.debug('Connected to Livekit room')
+    if (isConnecting) {
+      logger.debug('Already attempting to connect, skipping')
+      return
+    }
+
+    try {
+      isConnecting = true
+
+      logger.debug(`Connecting identity "${identity}" to Livekit room "${roomName}"`)
+      const token = await getToken()
+      await room.connect(host, token)
+      logger.debug('Connected to Livekit room')
+    } finally {
+      isConnecting = false
+    }
   }
 
   async function getToken() {

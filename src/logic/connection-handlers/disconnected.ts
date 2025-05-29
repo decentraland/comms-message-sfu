@@ -13,6 +13,11 @@ export async function createDisconnectedHandler(
 
   function handle(reconnect: () => Promise<void>) {
     return async (reason: DisconnectReason) => {
+      if (reason === DisconnectReason.DUPLICATE_IDENTITY) {
+        logger.warn('Duplicate identity detected, skipping reconnect')
+        return
+      }
+
       logger.warn('Disconnected from Livekit room', { reason })
       metrics.observe('livekit_connection_status', {}, 0)
 
