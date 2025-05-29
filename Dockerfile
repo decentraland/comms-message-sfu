@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     g++ \
     libc6-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # build the app
@@ -29,6 +30,7 @@ FROM node:22-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     tini \
     libc6-dev \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # NODE_ENV is used to configure some runtime options, like JSON logger
