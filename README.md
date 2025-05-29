@@ -94,7 +94,7 @@ yarn dev
 LIVEKIT_HOST=your-livekit-host
 LIVEKIT_API_KEY=your-livekit-api-key
 LIVEKIT_API_SECRET=your-livekit-api-secret
-LIVEKIT_ROOM_NAME=your-room-name
+LIVEKIT_ROOM_ID=your-room-id
 LIVEKIT_IDENTITY_PREFIX=your-identity-prefix
 REPLICA_ID=your-replica-id
 ```
