@@ -2,6 +2,7 @@ import { IBaseComponent, START_COMPONENT, STOP_COMPONENT } from '@well-known-com
 import { AppComponents } from '../types'
 import { AccessToken } from 'livekit-server-sdk'
 import { Room, RoomEvent } from '@livekit/rtc-node'
+import { retry } from '../utils/retrier'
 
 export type ILivekitComponent = IBaseComponent
 
@@ -44,10 +45,8 @@ export async function createLivekitComponent(
 
   let room: Room | null = null
   let isConnecting = false
-  let reconnectAttempts = 0
 
   const handleConnected = () => {
-    reconnectAttempts = 0
     connectedHandler.handle()
   }
   const handleDisconnected = disconnectedHandler.handle(reconnect)
@@ -89,28 +88,23 @@ export async function createLivekitComponent(
       return
     }
 
-    if (reconnectAttempts >= maxReconnectAttempts) {
-      logger.error('Max reconnect attempts reached, giving up')
-      return
-    }
-
     try {
       isConnecting = true
-      reconnectAttempts++
 
-      logger.debug(
-        `Connecting identity "${identity}" to Livekit room "${roomName}" (attempt ${reconnectAttempts}/${maxReconnectAttempts})`
+      await retry(
+        async (attempt) => {
+          logger.debug(
+            `Connecting identity "${identity}" to Livekit room "${roomName}" (attempt ${attempt}/${maxReconnectAttempts})`
+          )
+          const token = await getToken()
+          await room!.connect(host, token)
+          logger.debug('Connected to Livekit room')
+        },
+        maxReconnectAttempts,
+        reconnectDelayInMs
       )
-      const token = await getToken()
-      await room.connect(host, token)
-      logger.debug('Connected to Livekit room')
     } catch (error) {
-      logger.error('Failed to connect to Livekit room', { error: String(error) })
-      if (reconnectAttempts < maxReconnectAttempts) {
-        logger.debug(`Waiting ${reconnectDelayInMs}ms before retrying...`)
-        await new Promise((resolve) => setTimeout(resolve, reconnectDelayInMs))
-        void connect()
-      }
+      logger.error('Failed to connect to Livekit room after all retries', { error: String(error) })
     } finally {
       isConnecting = false
     }
@@ -155,8 +149,6 @@ export async function createLivekitComponent(
 
     room = null
     isConnecting = false
-    reconnectAttempts = 0
-
     handleDataReceived = null
     logger.debug('Disconnected from Livekit room')
   }
