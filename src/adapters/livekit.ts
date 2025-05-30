@@ -1,7 +1,7 @@
 import { IBaseComponent, START_COMPONENT, STOP_COMPONENT } from '@well-known-components/interfaces'
 import { AppComponents } from '../types'
 import { AccessToken } from 'livekit-server-sdk'
-import { Room, RoomEvent } from '@livekit/rtc-node'
+import { ConnectionState, Room, RoomEvent } from '@livekit/rtc-node'
 import { retry } from '../utils/retrier'
 
 export type ILivekitComponent = IBaseComponent
@@ -46,16 +46,13 @@ export async function createLivekitComponent(
   let room: Room | null = null
   let isConnecting = false
 
-  const handleConnected = () => {
-    connectedHandler.handle()
-  }
   const handleDisconnected = disconnectedHandler.handle(reconnect)
   let handleDataReceived:
     | ((payload: Uint8Array, participant?: any, kind?: number, topic?: string) => Promise<void>)
     | null = null
 
   async function reconnect() {
-    if (room) {
+    if (room && room.connectionState) {
       await disconnect()
       room = await createRoom()
     }
@@ -68,7 +65,7 @@ export async function createLivekitComponent(
     handleDataReceived = dataReceivedHandler.handle(newRoom, identity)
 
     newRoom
-      .on(RoomEvent.Connected, handleConnected)
+      .on(RoomEvent.Connected, connectedHandler.handle)
       .on(RoomEvent.Reconnecting, reconnectingHandler.handle)
       .on(RoomEvent.Reconnected, reconnectedHandler.handle)
       .on(RoomEvent.Disconnected, handleDisconnected)
@@ -85,6 +82,16 @@ export async function createLivekitComponent(
 
     if (!room) {
       logger.error('Room not initialized, skipping')
+      return
+    }
+
+    if (room.connectionState === ConnectionState.CONN_CONNECTED) {
+      logger.debug('Room already connected, skipping')
+      return
+    }
+
+    if (room.connectionState === ConnectionState.CONN_RECONNECTING) {
+      logger.debug('Room already reconnecting, skipping')
       return
     }
 
@@ -136,7 +143,7 @@ export async function createLivekitComponent(
     logger.debug('Unsubscribing from Livekit room events')
 
     room
-      .off(RoomEvent.Connected, handleConnected)
+      .off(RoomEvent.Connected, connectedHandler.handle)
       .off(RoomEvent.Reconnecting, reconnectingHandler.handle)
       .off(RoomEvent.Reconnected, reconnectedHandler.handle)
       .off(RoomEvent.Disconnected, handleDisconnected)
