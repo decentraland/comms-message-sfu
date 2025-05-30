@@ -11,7 +11,7 @@ export async function createReconnectedHandler(
   const logger = logs.getLogger('connection-handlers')
 
   function handle() {
-    logger.info('Reconnected to Livekit room')
+    logger.info('Reconnected to Livekit Server')
     metrics.observe('livekit_connection_status', {}, 1)
   }
 
