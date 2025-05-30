@@ -27,6 +27,12 @@ export enum MockDisconnectionReason {
   SIP_TRUNK_FAILURE = 13
 }
 
+export enum MockConnectionState {
+  CONN_DISCONNECTED = 0,
+  CONN_CONNECTED = 1,
+  CONN_RECONNECTING = 2
+}
+
 export type MockRoom = {
   connect: jest.Mock
   disconnect: jest.Mock

@@ -45,7 +45,14 @@ describe('when handling disconnection', () => {
   })
 
   describe('and the disconnect does not require reconnection', () => {
-    const noReconnectReasons = [MockDisconnectionReason.CLIENT_INITIATED, MockDisconnectionReason.ROOM_DELETED]
+    const noReconnectReasons = [
+      MockDisconnectionReason.CLIENT_INITIATED,
+      MockDisconnectionReason.ROOM_DELETED,
+      MockDisconnectionReason.DUPLICATE_IDENTITY,
+      MockDisconnectionReason.USER_UNAVAILABLE,
+      MockDisconnectionReason.USER_REJECTED,
+      MockDisconnectionReason.SIP_TRUNK_FAILURE
+    ]
 
     test.each(noReconnectReasons)('should not attempt to reconnect when reason is %s', async (reason) => {
       await disconnectedHandler.handle(mockReconnect)(reason as any)

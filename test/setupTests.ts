@@ -1,4 +1,4 @@
-import { mockRoom, MockRoomEvent, MockDisconnectionReason } from './mocks/livekit'
+import { mockRoom, MockRoomEvent, MockDisconnectionReason, MockConnectionState } from './mocks/livekit'
 
 // Mock the entire @livekit/rtc-node module to avoid native bindings
 jest.mock('@livekit/rtc-node', () => ({
@@ -8,7 +8,8 @@ jest.mock('@livekit/rtc-node', () => ({
     KIND_LOSSY: 1,
     KIND_RELIABLE: 2
   },
-  DisconnectReason: MockDisconnectionReason
+  DisconnectReason: MockDisconnectionReason,
+  ConnectionState: MockConnectionState
 }))
 
 beforeEach(() => {
