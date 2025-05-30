@@ -10,7 +10,22 @@ export enum MockRoomEvent {
   DataReceived = 'dataReceived'
 }
 
-export enum MockDisconnectionReason {}
+export enum MockDisconnectionReason {
+  UNKNOWN_REASON = 0,
+  CLIENT_INITIATED = 1,
+  DUPLICATE_IDENTITY = 2,
+  SERVER_SHUTDOWN = 3,
+  PARTICIPANT_REMOVED = 4,
+  ROOM_DELETED = 5,
+  STATE_MISMATCH = 6,
+  JOIN_FAILURE = 7,
+  MIGRATION = 8,
+  SIGNAL_CLOSE = 9,
+  ROOM_CLOSED = 10,
+  USER_UNAVAILABLE = 11,
+  USER_REJECTED = 12,
+  SIP_TRUNK_FAILURE = 13
+}
 
 export type MockRoom = {
   connect: jest.Mock
