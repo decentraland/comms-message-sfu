@@ -1,7 +1,7 @@
 import { IBaseComponent, START_COMPONENT, STOP_COMPONENT } from '@well-known-components/interfaces'
 import { AppComponents } from '../types'
 import { AccessToken } from 'livekit-server-sdk'
-import { ConnectionState, Room, RoomEvent } from '@livekit/rtc-node'
+import { ConnectionState, DataPacketKind, RemoteParticipant, Room, RoomEvent } from '@livekit/rtc-node'
 import { retry } from '../utils/retrier'
 
 export type ILivekitComponent = IBaseComponent
@@ -48,7 +48,12 @@ export async function createLivekitComponent(
 
   const handleDisconnected = disconnectedHandler.handle(reconnect)
   let handleDataReceived:
-    | ((payload: Uint8Array, participant?: any, kind?: number, topic?: string) => Promise<void>)
+    | ((
+        payload: Uint8Array<ArrayBufferLike>,
+        participant?: RemoteParticipant,
+        kind?: DataPacketKind,
+        topic?: string
+      ) => Promise<void>)
     | null = null
 
   async function reconnect() {
@@ -69,7 +74,7 @@ export async function createLivekitComponent(
       .on(RoomEvent.Reconnecting, reconnectingHandler.handle)
       .on(RoomEvent.Reconnected, reconnectedHandler.handle)
       .on(RoomEvent.Disconnected, handleDisconnected)
-      .on(RoomEvent.DataReceived, handleDataReceived!)
+      .on(RoomEvent.DataReceived, handleDataReceived)
 
     return newRoom
   }
@@ -105,6 +110,7 @@ export async function createLivekitComponent(
           )
           const token = await getToken()
           await room!.connect(host, token)
+
           logger.debug('Connected to Livekit room')
         },
         maxReconnectAttempts,
@@ -126,8 +132,7 @@ export async function createLivekitComponent(
       roomJoin: true,
       canPublish: true,
       canSubscribe: true,
-      canPublishData: true,
-      hidden: true
+      canPublishData: true
     })
     return token.toJwt()
   }

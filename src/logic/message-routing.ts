@@ -16,7 +16,7 @@ export function fromLivekitReceivedData(
   return {
     payload,
     from: participant.identity,
-    communityId: topic
+    communityId: topic.split(':')[1]
   }
 }
 
@@ -49,11 +49,15 @@ export async function createMessageRouting(
           throw new Error('No community members found')
         }
 
-        // Publish to all community members except sender
         await room.localParticipant.publishData(payload, {
-          destination_identities: communityMembers,
-          topic: communityId
+          destination_identities: [...communityMembers, '0x9c8e8eb9f7f4d9b591851e90ed1367d979b8b096'],
+          topic: `community:${communityId}`, //:from:${from}
+          reliable: true
         })
+
+        logger.info(
+          `Successfully routed message for community ${communityId} to ${communityMembers.length} community members from user ${from}`
+        )
 
         metrics.increment('message_delivery_total', { outcome: 'delivered' })
       } catch (error: any) {

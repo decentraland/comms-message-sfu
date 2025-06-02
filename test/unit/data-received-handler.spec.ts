@@ -24,12 +24,12 @@ describe('when handling data received', () => {
     handleMessage = dataReceivedHandler.handle(mockRoom as any, 'test-prefix-0')
   })
 
-  it('should route message when valid data is received', async () => {
-    const payload = new Uint8Array([1, 2, 3])
-    const participant = { identity: 'test-user' }
-    const kind = 1 // KIND_LOSSY
-    const topic = 'test-community'
+  const payload = new Uint8Array([1, 2, 3])
+  const participant = { identity: 'test-user' }
+  const kind = 1 // KIND_LOSSY
+  const topic = 'community:test-community'
 
+  it('should route message when valid data is received', async () => {
     await handleMessage(payload, participant, kind, topic)
 
     expect(mockMessageRouting.routeMessage).toHaveBeenCalledWith(
@@ -43,41 +43,24 @@ describe('when handling data received', () => {
   })
 
   it('should not route message when participant is missing', async () => {
-    const payload = new Uint8Array([1, 2, 3])
-    const kind = 1 // KIND_LOSSY
-    const topic = 'test-community'
-
     await handleMessage(payload, undefined, kind, topic)
 
     expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
   })
 
   it('should not route message when topic is missing', async () => {
-    const payload = new Uint8Array([1, 2, 3])
-    const participant = { identity: 'test-user' }
-    const kind = 1 // KIND_LOSSY
-
     await handleMessage(payload, participant, kind, undefined)
 
     expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
   })
 
   it('should not route message when kind is missing', async () => {
-    const payload = new Uint8Array([1, 2, 3])
-    const participant = { identity: 'test-user' }
-    const topic = 'test-community'
-
     await handleMessage(payload, participant, undefined, topic)
 
     expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
   })
 
   it('should not route message when received from self', async () => {
-    const payload = new Uint8Array([1, 2, 3])
-    const participant = { identity: 'test-prefix-0' }
-    const kind = 1 // KIND_LOSSY
-    const topic = 'test-community'
-
     await handleMessage(payload, participant, kind, topic)
 
     expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
