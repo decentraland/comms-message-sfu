@@ -1,7 +1,7 @@
 import { START_COMPONENT, STOP_COMPONENT } from '@well-known-components/interfaces'
 import { createLivekitComponent, ILivekitComponent } from '../../src/adapters/livekit'
 import { createTestLogsComponent } from '../mocks/components'
-import { MockRemoteParticipant, mockRoom, MockRoomEvent } from '../mocks/livekit'
+import { MockConnectionState, MockRemoteParticipant, mockRoom, MockRoomEvent } from '../mocks/livekit'
 import { IDataReceivedHandler } from '../../src/logic/data-received-handler'
 import { IConfigComponent } from '@well-known-components/interfaces'
 import { createConfigComponent } from '@well-known-components/env-config-provider'
@@ -41,10 +41,16 @@ describe('when handling the Livekit component', () => {
   }
 
   beforeEach(async () => {
-    jest.clearAllMocks()
-
     mockRetry.mockImplementation(async (action) => action(1))
     mockSleep.mockResolvedValue(undefined)
+
+    // Reset mock room state
+    mockRoom.connect.mockReset()
+    mockRoom.disconnect.mockReset()
+    mockRoom.on.mockReset().mockReturnThis()
+    mockRoom.off.mockReset().mockReturnThis()
+    mockRoom.localParticipant.publishData.mockReset()
+    mockRoom.connectionState = MockConnectionState.CONN_DISCONNECTED
 
     mockDataReceivedHandler = {
       handle: jest.fn().mockReturnValue(jest.fn())
@@ -180,6 +186,59 @@ describe('when handling the Livekit component', () => {
         expect(mockRoom.connect).toHaveBeenCalledTimes(1)
       })
     })
+
+    describe('and room is already connected', () => {
+      beforeEach(() => {
+        mockRoom.connectionState = MockConnectionState.CONN_CONNECTED
+      })
+
+      it('should skip connection attempt when room is already connected', async () => {
+        await livekit[START_COMPONENT]({} as any)
+
+        expect(mockRetry).not.toHaveBeenCalled()
+        expect(mockRoom.connect).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('and room is reconnecting', () => {
+      beforeEach(() => {
+        mockRoom.connectionState = MockConnectionState.CONN_RECONNECTING
+      })
+
+      it('should skip connection attempt when room is already reconnecting', async () => {
+        await livekit[START_COMPONENT]({} as any)
+
+        expect(mockRetry).not.toHaveBeenCalled()
+        expect(mockRoom.connect).not.toHaveBeenCalled()
+      })
+    })
+
+    describe('and handling connection state transitions', () => {
+      beforeEach(async () => {
+        await livekit[STOP_COMPONENT]()
+        mockRoom.connectionState = MockConnectionState.CONN_DISCONNECTED
+      })
+
+      it('should connect when disconnected', async () => {
+        await livekit[START_COMPONENT]({} as any)
+        expect(mockRetry).toHaveBeenCalled()
+        expect(mockRoom.connect).toHaveBeenCalled()
+      })
+
+      it('should skip a new connection attempt when connected', async () => {
+        mockRoom.connectionState = MockConnectionState.CONN_CONNECTED
+        await livekit[START_COMPONENT]({} as any)
+        expect(mockRetry).not.toHaveBeenCalled()
+        expect(mockRoom.connect).not.toHaveBeenCalled()
+      })
+
+      it('should skip a new connection attempt when reconnecting', async () => {
+        mockRoom.connectionState = MockConnectionState.CONN_RECONNECTING
+        await livekit[START_COMPONENT]({} as any)
+        expect(mockRetry).not.toHaveBeenCalled()
+        expect(mockRoom.connect).not.toHaveBeenCalled()
+      })
+    })
   })
 
   describe('and stopping the component', () => {
@@ -303,6 +362,12 @@ describe('when handling the Livekit component', () => {
   })
 
   describe('and generating tokens', () => {
+    beforeEach(async () => {
+      mockRoom.connect.mockReset()
+      mockRoom.connectionState = MockConnectionState.CONN_DISCONNECTED
+      mockRoom.localParticipant.publishData.mockReset()
+    })
+
     it('should generate a valid JWT token with correct permissions', async () => {
       await livekit[START_COMPONENT]({} as any)
 

@@ -12,6 +12,8 @@ describe('when handling data received', () => {
   let mockMessageRouting: jest.Mocked<IMessageRoutingComponent>
   let handleMessage: (payload: Uint8Array, participant?: any, kind?: number, topic?: string) => Promise<void>
 
+  const identity = 'test-prefix-0'
+
   beforeEach(async () => {
     mockMessageRouting = createTestMessageRoutingComponent()
 
@@ -21,7 +23,7 @@ describe('when handling data received', () => {
       metrics: createTestMetricsComponent(metricDeclarations)
     })
 
-    handleMessage = dataReceivedHandler.handle(mockRoom as any, 'test-prefix-0')
+    handleMessage = dataReceivedHandler.handle(mockRoom as any, identity)
   })
 
   const payload = new Uint8Array([1, 2, 3])
@@ -61,7 +63,7 @@ describe('when handling data received', () => {
   })
 
   it('should not route message when received from self', async () => {
-    await handleMessage(payload, participant, kind, topic)
+    await handleMessage(payload, { ...participant, identity }, kind, topic)
 
     expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
   })

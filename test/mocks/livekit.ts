@@ -41,6 +41,7 @@ export type MockRoom = {
   localParticipant: {
     publishData: jest.Mock
   }
+  connectionState: MockConnectionState
 }
 
 export const mockRoom: MockRoom = {
@@ -50,5 +51,6 @@ export const mockRoom: MockRoom = {
   off: jest.fn().mockReturnThis(),
   localParticipant: {
     publishData: jest.fn()
-  }
+  },
+  connectionState: MockConnectionState.CONN_DISCONNECTED
 }
