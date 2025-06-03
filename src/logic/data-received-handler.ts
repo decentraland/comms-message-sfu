@@ -27,6 +27,8 @@ export async function createDataReceivedHandler(
       kind?: DataPacketKind,
       topic?: string
     ) => {
+      logger.debug('Received data from Livekit room')
+
       if (!participant) {
         logger.error('No participant provided')
         return

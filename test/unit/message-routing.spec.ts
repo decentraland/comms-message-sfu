@@ -41,7 +41,7 @@ describe('when handling message routing', () => {
       const payload = new Uint8Array([1, 2, 3])
       const participant = { identity: 'test-user' }
       const kind = 1 // KIND_LOSSY
-      const topic = 'test-community'
+      const topic = 'community:test-community'
 
       const message = fromLivekitReceivedData(payload, participant as any, kind, topic)
 
@@ -112,7 +112,8 @@ describe('when handling message routing', () => {
 
         expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(message.payload, {
           destination_identities: ['user1', 'user2'],
-          topic: 'test-community'
+          reliable: true,
+          topic: 'community:test-community:from:test-user'
         })
 
         expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
