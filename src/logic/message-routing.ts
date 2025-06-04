@@ -40,6 +40,12 @@ export async function createMessageRouting(
           throw new Error('No local participant available')
         }
 
+        const isMember = await db.belongsToCommunity(communityId, from)
+        if (!isMember) {
+          logger.info(`User ${from} is not a member of community ${communityId}, skipping message routing`)
+          return
+        }
+
         const communityMembers = await db.getCommunityMembers(communityId, {
           // TODO(enhancement): include: [online users],
           exclude: [from]
