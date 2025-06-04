@@ -42,8 +42,7 @@ export async function createMessageRouting(
 
         const isMember = await db.belongsToCommunity(communityId, from)
         if (!isMember) {
-          logger.info(`User ${from} is not a member of community ${communityId}, skipping message routing`)
-          return
+          throw new Error(`User ${from} is not a member of community ${communityId}, skipping message routing`)
         }
 
         const communityMembers = await db.getCommunityMembers(communityId, {

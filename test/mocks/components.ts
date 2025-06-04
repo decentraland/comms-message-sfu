@@ -5,6 +5,7 @@ import { IMessageRoutingComponent } from '../../src/logic/message-routing'
 
 export function createTestDBComponent(): jest.Mocked<IDatabaseComponent> {
   return {
+    belongsToCommunity: jest.fn(),
     getCommunityMembers: jest.fn()
   }
 }

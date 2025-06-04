@@ -19,7 +19,8 @@ describe('when handling message routing', () => {
 
   beforeEach(async () => {
     mockDB = {
-      getCommunityMembers: jest.fn()
+      getCommunityMembers: jest.fn(),
+      belongsToCommunity: jest.fn()
     }
     mockLogs = createTestLogsComponent()
     mockTimer = { end: jest.fn() }
@@ -94,6 +95,7 @@ describe('when handling message routing', () => {
 
     describe('when community has members', () => {
       beforeEach(() => {
+        mockDB.belongsToCommunity.mockResolvedValue(true)
         mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
       })
 
@@ -124,6 +126,7 @@ describe('when handling message routing', () => {
 
     describe('when community has no members', () => {
       beforeEach(() => {
+        mockDB.belongsToCommunity.mockResolvedValue(false)
         mockDB.getCommunityMembers.mockResolvedValue([])
       })
 
@@ -143,8 +146,31 @@ describe('when handling message routing', () => {
       })
     })
 
+    describe('when user is not a member of the community', () => {
+      beforeEach(() => {
+        mockDB.belongsToCommunity = jest.fn().mockResolvedValue(false)
+      })
+
+      it('should skip message routing and log info', async () => {
+        const message: IncomingMessage = {
+          payload: new Uint8Array([1, 2, 3]),
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        expect(mockDB.belongsToCommunity).toHaveBeenCalledWith('test-community', 'test-user')
+        expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
+        expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+        expect(mockTimer.end).toHaveBeenCalled()
+      })
+    })
+
     describe('when database fails', () => {
       beforeEach(() => {
+        mockDB.belongsToCommunity.mockResolvedValue(true)
         mockDB.getCommunityMembers.mockRejectedValue(new Error('DB error'))
       })
 
