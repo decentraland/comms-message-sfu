@@ -57,7 +57,7 @@ export async function createLivekitComponent(
     | null = null
 
   async function reconnect() {
-    if (room && room.connectionState) {
+    if (room) {
       await disconnect()
       room = await createRoom()
     }
