@@ -38,7 +38,7 @@ describe('when handling disconnection', () => {
       MockDisconnectionReason.ROOM_CLOSED
     ]
 
-    test.each(reconnectReasons)('should attempt to reconnect when reason is %s', async (reason) => {
+    it.each(reconnectReasons)('should attempt to reconnect when reason is %s', async (reason) => {
       await disconnectedHandler.handle(mockReconnect)(reason as any)
       expect(mockReconnect).toHaveBeenCalled()
     })
@@ -54,7 +54,7 @@ describe('when handling disconnection', () => {
       MockDisconnectionReason.SIP_TRUNK_FAILURE
     ]
 
-    test.each(noReconnectReasons)('should not attempt to reconnect when reason is %s', async (reason) => {
+    it.each(noReconnectReasons)('should not attempt to reconnect when reason is %s', async (reason) => {
       await disconnectedHandler.handle(mockReconnect)(reason as any)
       expect(mockReconnect).not.toHaveBeenCalled()
     })

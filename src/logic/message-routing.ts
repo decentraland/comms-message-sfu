@@ -1,8 +1,9 @@
 import { AppComponents } from '../types'
 import { DataPacketKind, RemoteParticipant, Room } from '@livekit/rtc-node'
+import { Chat } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 
 export type IncomingMessage = {
-  payload: Uint8Array<ArrayBufferLike>
+  chatMessage: Chat
   from: string
   communityId: string
 }
@@ -13,8 +14,10 @@ export function fromLivekitReceivedData(
   _kind: DataPacketKind,
   topic: string
 ): IncomingMessage {
+  // TODO(chore): remove log
+  console.log('Decoded payload', Chat.decode(payload))
   return {
-    payload,
+    chatMessage: Chat.decode(payload),
     from: participant.identity,
     communityId: topic.split(':')[1]
   }
@@ -33,7 +36,7 @@ export async function createMessageRouting(
   return {
     async routeMessage(room: Room, message: IncomingMessage) {
       const messageDeliveryLatencyTimer = metrics.startTimer('message_delivery_latency')
-      const { payload, from, communityId } = message
+      const { chatMessage: payload, from, communityId } = message
 
       try {
         if (!room.localParticipant) {
@@ -54,7 +57,12 @@ export async function createMessageRouting(
           throw new Error('No community members found')
         }
 
-        await room.localParticipant.publishData(payload, {
+        const encodedPayload = Chat.encode({
+          ...payload,
+          from
+        }).finish()
+
+        await room.localParticipant.publishData(encodedPayload, {
           destination_identities: communityMembers,
           topic: `community:${communityId}:from:${from}`,
           reliable: true
