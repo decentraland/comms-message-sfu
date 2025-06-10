@@ -14,8 +14,6 @@ export function fromLivekitReceivedData(
   _kind: DataPacketKind,
   topic: string
 ): IncomingMessage {
-  // TODO(chore): remove log
-  console.log('Decoded payload', Chat.decode(payload))
   return {
     chatMessage: Chat.decode(payload),
     from: participant.identity,
@@ -59,7 +57,7 @@ export async function createMessageRouting(
 
         const encodedPayload = Chat.encode({
           ...payload,
-          from
+          forwardedFrom: from
         }).finish()
 
         await room.localParticipant.publishData(encodedPayload, {

@@ -131,7 +131,7 @@ describe('when handling message routing', () => {
 
         const expectedEncodedPayload = Chat.encode({
           ...chatMessage,
-          from: 'test-user'
+          forwardedFrom: 'test-user'
         }).finish()
 
         expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(expectedEncodedPayload, {
