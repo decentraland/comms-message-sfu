@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@dcl/eslint-config": "^2.2.1",
+    "@dcl/protocol": "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-15552878731.commit-bf4e21b.tgz",
     "@livekit/rtc-node": "^0.13.14",
     "@well-known-components/env-config-provider": "^1.2.0",
     "@well-known-components/http-server": "^2.1.0",

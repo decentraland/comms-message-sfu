@@ -6,6 +6,7 @@ import { mockRoom } from '../mocks/livekit'
 import { IMessageRoutingComponent } from '../../src/logic/message-routing'
 import { createTestMetricsComponent } from '@well-known-components/metrics'
 import { metricDeclarations } from '../../src/metrics'
+import { Chat } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 
 describe('when handling data received', () => {
   let dataReceivedHandler: IDataReceivedHandler
@@ -26,18 +27,22 @@ describe('when handling data received', () => {
     handleMessage = dataReceivedHandler.handle(mockRoom as any, identity)
   })
 
-  const payload = new Uint8Array([1, 2, 3])
+  const payload = Chat.create({
+    message: 'Hello world',
+    timestamp: Date.now()
+  })
+  const encodedPayload = Chat.encode(payload).finish()
   const participant = { identity: 'test-user' }
   const kind = 1 // KIND_LOSSY
   const topic = 'community:test-community'
 
   it('should route message when valid data is received', async () => {
-    await handleMessage(payload, participant, kind, topic)
+    await handleMessage(encodedPayload, participant, kind, topic)
 
     expect(mockMessageRouting.routeMessage).toHaveBeenCalledWith(
       mockRoom,
       expect.objectContaining({
-        payload,
+        chatMessage: payload,
         from: 'test-user',
         communityId: 'test-community'
       })
@@ -45,25 +50,25 @@ describe('when handling data received', () => {
   })
 
   it('should not route message when participant is missing', async () => {
-    await handleMessage(payload, undefined, kind, topic)
+    await handleMessage(encodedPayload, undefined, kind, topic)
 
     expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
   })
 
   it('should not route message when topic is missing', async () => {
-    await handleMessage(payload, participant, kind, undefined)
+    await handleMessage(encodedPayload, participant, kind, undefined)
 
     expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
   })
 
   it('should not route message when kind is missing', async () => {
-    await handleMessage(payload, participant, undefined, topic)
+    await handleMessage(encodedPayload, participant, undefined, topic)
 
     expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
   })
 
   it('should not route message when received from self', async () => {
-    await handleMessage(payload, { ...participant, identity }, kind, topic)
+    await handleMessage(encodedPayload, { ...participant, identity }, kind, topic)
 
     expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
   })

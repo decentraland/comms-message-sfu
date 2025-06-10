@@ -9,6 +9,7 @@ import { IDatabaseComponent } from '../../src/adapters/db'
 import { createTestLogsComponent } from '../mocks/components'
 import { MockRoom, mockRoom } from '../mocks/livekit'
 import { metricDeclarations } from '../../src/metrics'
+import { Chat } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 
 describe('when handling message routing', () => {
   let messageRouting: IMessageRoutingComponent
@@ -39,7 +40,11 @@ describe('when handling message routing', () => {
 
   describe('when transforming Livekit data', () => {
     it('should transform Livekit data into an IncomingMessage', () => {
-      const payload = new Uint8Array([1, 2, 3])
+      const chatMessage = Chat.create({
+        message: 'Hello world',
+        timestamp: Date.now()
+      })
+      const payload = Chat.encode(chatMessage).finish()
       const participant = { identity: 'test-user' }
       const kind = 1 // KIND_LOSSY
       const topic = 'community:test-community'
@@ -47,7 +52,7 @@ describe('when handling message routing', () => {
       const message = fromLivekitReceivedData(payload, participant as any, kind, topic)
 
       expect(message).toEqual({
-        payload,
+        chatMessage,
         from: 'test-user',
         communityId: 'test-community'
       })
@@ -56,8 +61,12 @@ describe('when handling message routing', () => {
 
   describe('when routing messages', () => {
     it('should start a timer to record message delivery latency', async () => {
+      const chatMessage = Chat.create({
+        message: 'Hello world',
+        timestamp: Date.now()
+      })
       const message: IncomingMessage = {
-        payload: new Uint8Array([1, 2, 3]),
+        chatMessage,
         from: 'test-user',
         communityId: 'test-community'
       }
@@ -78,8 +87,12 @@ describe('when handling message routing', () => {
       })
 
       it('should record metrics for failed delivery', async () => {
+        const chatMessage = Chat.create({
+          message: 'Hello world',
+          timestamp: Date.now()
+        })
         const message: IncomingMessage = {
-          payload: new Uint8Array([1, 2, 3]),
+          chatMessage,
           from: 'test-user',
           communityId: 'test-community'
         }
@@ -100,8 +113,12 @@ describe('when handling message routing', () => {
       })
 
       it('should route message and record metrics for successful delivery', async () => {
+        const chatMessage = Chat.create({
+          message: 'Hello world',
+          timestamp: Date.now()
+        })
         const message: IncomingMessage = {
-          payload: new Uint8Array([1, 2, 3]),
+          chatMessage,
           from: 'test-user',
           communityId: 'test-community'
         }
@@ -112,7 +129,12 @@ describe('when handling message routing', () => {
           exclude: ['test-user']
         })
 
-        expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(message.payload, {
+        const expectedEncodedPayload = Chat.encode({
+          ...chatMessage,
+          forwardedFrom: 'test-user'
+        }).finish()
+
+        expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(expectedEncodedPayload, {
           destination_identities: ['user1', 'user2'],
           reliable: true,
           topic: 'community:test-community:from:test-user'
@@ -131,8 +153,12 @@ describe('when handling message routing', () => {
       })
 
       it('should record metrics for failed delivery', async () => {
+        const chatMessage = Chat.create({
+          message: 'Hello world',
+          timestamp: Date.now()
+        })
         const message: IncomingMessage = {
-          payload: new Uint8Array([1, 2, 3]),
+          chatMessage,
           from: 'test-user',
           communityId: 'test-community'
         }
@@ -152,8 +178,12 @@ describe('when handling message routing', () => {
       })
 
       it('should skip message routing and log info', async () => {
+        const chatMessage = Chat.create({
+          message: 'Hello world',
+          timestamp: Date.now()
+        })
         const message: IncomingMessage = {
-          payload: new Uint8Array([1, 2, 3]),
+          chatMessage,
           from: 'test-user',
           communityId: 'test-community'
         }
@@ -175,8 +205,12 @@ describe('when handling message routing', () => {
       })
 
       it('should record metrics for failed delivery', async () => {
+        const chatMessage = Chat.create({
+          message: 'Hello world',
+          timestamp: Date.now()
+        })
         const message: IncomingMessage = {
-          payload: new Uint8Array([1, 2, 3]),
+          chatMessage,
           from: 'test-user',
           communityId: 'test-community'
         }
