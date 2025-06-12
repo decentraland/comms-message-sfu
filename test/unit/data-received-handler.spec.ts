@@ -42,7 +42,7 @@ describe('when handling data received', () => {
     expect(mockMessageRouting.routeMessage).toHaveBeenCalledWith(
       mockRoom,
       expect.objectContaining({
-        chatMessage: payload,
+        packet: payload,
         from: 'test-user',
         communityId: 'test-community'
       })
