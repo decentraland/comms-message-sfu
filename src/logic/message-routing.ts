@@ -1,9 +1,9 @@
 import { AppComponents } from '../types'
 import { DataPacketKind, RemoteParticipant, Room } from '@livekit/rtc-node'
-import { Chat } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
+import { Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 
 export type IncomingMessage = {
-  chatMessage: Chat
+  packet: Packet
   from: string
   communityId: string
 }
@@ -15,7 +15,7 @@ export function fromLivekitReceivedData(
   topic: string
 ): IncomingMessage {
   return {
-    chatMessage: Chat.decode(payload),
+    packet: Packet.decode(payload),
     from: participant.identity,
     communityId: topic.split(':')[1]
   }
@@ -34,11 +34,15 @@ export async function createMessageRouting(
   return {
     async routeMessage(room: Room, message: IncomingMessage) {
       const messageDeliveryLatencyTimer = metrics.startTimer('message_delivery_latency')
-      const { chatMessage: payload, from, communityId } = message
+      const { packet, from, communityId } = message
 
       try {
         if (!room.localParticipant) {
           throw new Error('No local participant available')
+        }
+
+        if (packet.message?.$case !== 'chat') {
+          throw new Error('Invalid message type')
         }
 
         const isMember = await db.belongsToCommunity(communityId, from)
@@ -55,9 +59,15 @@ export async function createMessageRouting(
           throw new Error('No community members found')
         }
 
-        const encodedPayload = Chat.encode({
-          ...payload,
-          forwardedFrom: from
+        const encodedPayload = Packet.encode({
+          ...packet,
+          message: {
+            ...packet.message,
+            chat: {
+              ...packet.message.chat,
+              forwardedFrom: from
+            }
+          }
         }).finish()
 
         await room.localParticipant.publishData(encodedPayload, {

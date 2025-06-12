@@ -9,7 +9,7 @@ import { IDatabaseComponent } from '../../src/adapters/db'
 import { createTestLogsComponent } from '../mocks/components'
 import { MockRoom, mockRoom } from '../mocks/livekit'
 import { metricDeclarations } from '../../src/metrics'
-import { Chat } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
+import { Chat, Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 
 describe('when handling message routing', () => {
   let messageRouting: IMessageRoutingComponent
@@ -40,11 +40,16 @@ describe('when handling message routing', () => {
 
   describe('when transforming Livekit data', () => {
     it('should transform Livekit data into an IncomingMessage', () => {
-      const chatMessage = Chat.create({
-        message: 'Hello world',
-        timestamp: Date.now()
+      const packet = Packet.create({
+        message: {
+          $case: 'chat',
+          chat: {
+            message: 'Hello world',
+            timestamp: Date.now()
+          }
+        }
       })
-      const payload = Chat.encode(chatMessage).finish()
+      const payload = Packet.encode(packet).finish()
       const participant = { identity: 'test-user' }
       const kind = 1 // KIND_LOSSY
       const topic = 'community:test-community'
@@ -52,7 +57,7 @@ describe('when handling message routing', () => {
       const message = fromLivekitReceivedData(payload, participant as any, kind, topic)
 
       expect(message).toEqual({
-        chatMessage,
+        packet,
         from: 'test-user',
         communityId: 'test-community'
       })
@@ -61,12 +66,17 @@ describe('when handling message routing', () => {
 
   describe('when routing messages', () => {
     it('should start a timer to record message delivery latency', async () => {
-      const chatMessage = Chat.create({
-        message: 'Hello world',
-        timestamp: Date.now()
+      const packet = Packet.create({
+        message: {
+          $case: 'chat',
+          chat: {
+            message: 'Hello world',
+            timestamp: Date.now()
+          }
+        }
       })
       const message: IncomingMessage = {
-        chatMessage,
+        packet,
         from: 'test-user',
         communityId: 'test-community'
       }
@@ -87,12 +97,17 @@ describe('when handling message routing', () => {
       })
 
       it('should record metrics for failed delivery', async () => {
-        const chatMessage = Chat.create({
-          message: 'Hello world',
-          timestamp: Date.now()
+        const packet = Packet.create({
+          message: {
+            $case: 'chat',
+            chat: {
+              message: 'Hello world',
+              timestamp: Date.now()
+            }
+          }
         })
         const message: IncomingMessage = {
-          chatMessage,
+          packet,
           from: 'test-user',
           communityId: 'test-community'
         }
@@ -106,19 +121,62 @@ describe('when handling message routing', () => {
       })
     })
 
+    describe('when message type is invalid', () => {
+      it('should record metrics for failed delivery', async () => {
+        const packet = Packet.create({
+          message: {
+            $case: 'position',
+            position: {
+              positionX: 0,
+              positionY: 0,
+              positionZ: 0,
+              rotationX: 0,
+              rotationY: 0,
+              rotationZ: 0,
+              rotationW: 1,
+              index: 0
+            }
+          }
+        })
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
+        expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+        expect(mockTimer.end).toHaveBeenCalled()
+      })
+    })
+
     describe('when community has members', () => {
+      let chat: Chat
+      let packet: Packet
+
       beforeEach(() => {
         mockDB.belongsToCommunity.mockResolvedValue(true)
         mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
-      })
 
-      it('should route message and record metrics for successful delivery', async () => {
-        const chatMessage = Chat.create({
+        chat = Chat.create({
           message: 'Hello world',
           timestamp: Date.now()
         })
+
+        packet = Packet.create({
+          message: {
+            $case: 'chat',
+            chat
+          }
+        })
+      })
+
+      it('should route message and record metrics for successful delivery', async () => {
         const message: IncomingMessage = {
-          chatMessage,
+          packet,
           from: 'test-user',
           communityId: 'test-community'
         }
@@ -129,9 +187,15 @@ describe('when handling message routing', () => {
           exclude: ['test-user']
         })
 
-        const expectedEncodedPayload = Chat.encode({
-          ...chatMessage,
-          forwardedFrom: 'test-user'
+        const expectedEncodedPayload = Packet.encode({
+          ...packet,
+          message: {
+            $case: 'chat',
+            chat: {
+              ...chat,
+              forwardedFrom: 'test-user'
+            }
+          }
         }).finish()
 
         expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(expectedEncodedPayload, {
@@ -153,12 +217,17 @@ describe('when handling message routing', () => {
       })
 
       it('should record metrics for failed delivery', async () => {
-        const chatMessage = Chat.create({
-          message: 'Hello world',
-          timestamp: Date.now()
+        const packet = Packet.create({
+          message: {
+            $case: 'chat',
+            chat: {
+              message: 'Hello world',
+              timestamp: Date.now()
+            }
+          }
         })
         const message: IncomingMessage = {
-          chatMessage,
+          packet,
           from: 'test-user',
           communityId: 'test-community'
         }
@@ -178,12 +247,17 @@ describe('when handling message routing', () => {
       })
 
       it('should skip message routing and log info', async () => {
-        const chatMessage = Chat.create({
-          message: 'Hello world',
-          timestamp: Date.now()
+        const packet = Packet.create({
+          message: {
+            $case: 'chat',
+            chat: {
+              message: 'Hello world',
+              timestamp: Date.now()
+            }
+          }
         })
         const message: IncomingMessage = {
-          chatMessage,
+          packet,
           from: 'test-user',
           communityId: 'test-community'
         }
@@ -205,12 +279,17 @@ describe('when handling message routing', () => {
       })
 
       it('should record metrics for failed delivery', async () => {
-        const chatMessage = Chat.create({
-          message: 'Hello world',
-          timestamp: Date.now()
+        const packet = Packet.create({
+          message: {
+            $case: 'chat',
+            chat: {
+              message: 'Hello world',
+              timestamp: Date.now()
+            }
+          }
         })
         const message: IncomingMessage = {
-          chatMessage,
+          packet,
           from: 'test-user',
           communityId: 'test-community'
         }
