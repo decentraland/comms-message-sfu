@@ -62,7 +62,7 @@ export async function createMessageRouting(
 
         await room.localParticipant.publishData(encodedPayload, {
           destination_identities: communityMembers,
-          topic: `community:${communityId}:from:${from}`,
+          topic: `community:${communityId}`,
           reliable: true
         })
 
