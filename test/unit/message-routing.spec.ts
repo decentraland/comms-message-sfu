@@ -137,7 +137,7 @@ describe('when handling message routing', () => {
         expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(expectedEncodedPayload, {
           destination_identities: ['user1', 'user2'],
           reliable: true,
-          topic: 'community:test-community:from:test-user'
+          topic: 'community:test-community'
         })
 
         expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
