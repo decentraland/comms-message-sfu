@@ -302,14 +302,6 @@
     eslint-plugin-prettier "^5.1.3"
     prettier "^3.3.2"
 
-"@dcl/protocol@https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-15440919262.commit-d8e81a4.tgz":
-  version "1.0.0-15440919262.commit-d8e81a4"
-  resolved "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-15440919262.commit-d8e81a4.tgz"
-  integrity sha512-+6YlOm7cZTuSHwxp1whYkDQDNM/A1sZfPwJkL2xDdLVXwel3K5M3+fWdqHynZcMmHxvfiq8zjpQB1YInuGfOfg==
-  dependencies:
-    "@dcl/ts-proto" "1.154.0"
-    protobufjs "7.2.4"
-
 "@dcl/protocol@https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-15552878731.commit-bf4e21b.tgz":
   version "1.0.0-15552878731.commit-bf4e21b"
   resolved "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-15552878731.commit-bf4e21b.tgz#ac81345470f60bcd275babb30915ed71144a8a3e"
@@ -663,35 +655,35 @@
   dependencies:
     "@bufbuild/protobuf" "^1.10.0"
 
-"@livekit/rtc-node-darwin-arm64@0.13.14":
-  version "0.13.14"
-  resolved "https://registry.npmjs.org/@livekit/rtc-node-darwin-arm64/-/rtc-node-darwin-arm64-0.13.14.tgz"
-  integrity sha512-o1g2mPvbTROqbs2G0rULJ4uvyN8/H29MA9RCxtxKVshwZhTWHKZ2FIkSZpiOUPnzQfPP8ZISgo8i5vqxq6qjvQ==
+"@livekit/rtc-node-darwin-arm64@0.13.17":
+  version "0.13.17"
+  resolved "https://registry.yarnpkg.com/@livekit/rtc-node-darwin-arm64/-/rtc-node-darwin-arm64-0.13.17.tgz#5e9326e6384781b03ad2a7b90da65c57c93a1e0b"
+  integrity sha512-3F9FKAeJCkvBc3lVFnuVmhSzPQ6GWty2a6UaPt9Ph+kkOoXY5eaxgpDcYYaDQ7YnYfU4WaSCh9hORkIMQj3/ZQ==
 
-"@livekit/rtc-node-darwin-x64@0.13.14":
-  version "0.13.14"
-  resolved "https://registry.yarnpkg.com/@livekit/rtc-node-darwin-x64/-/rtc-node-darwin-x64-0.13.14.tgz#f55f31a68812f5713f2a9aa4cc8c6f57c7ce5eaf"
-  integrity sha512-MBVXapEig6kfXyhhGJ8CwwCs1gj3qU2MkJ7zB2AfO9hKxIwWCecghOqipSu93xVybrmshoRNadSqL3G0A/K67A==
+"@livekit/rtc-node-darwin-x64@0.13.17":
+  version "0.13.17"
+  resolved "https://registry.yarnpkg.com/@livekit/rtc-node-darwin-x64/-/rtc-node-darwin-x64-0.13.17.tgz#896d9be92c8e9ea33357359fbbad09665258ac63"
+  integrity sha512-wsipbIXWUBN2RPU+ra4qykVuOSPGVlSKk2sOjEhp6Gj/+kHiLRDPg7KdCYcOcRGqKl5KOI1GKpaRZkqgjWbZUA==
 
-"@livekit/rtc-node-linux-arm64-gnu@0.13.14":
-  version "0.13.14"
-  resolved "https://registry.yarnpkg.com/@livekit/rtc-node-linux-arm64-gnu/-/rtc-node-linux-arm64-gnu-0.13.14.tgz#2b032c8ff8b8c322d700a1eac074fae143f934e6"
-  integrity sha512-dKkArPtKqbjdnmhOD+h4PmssVHCW2joZPPlNjIcFLZ8WqC306VNVVr89dg11otBS0XzuGibvDU0hq/ivQgCl2Q==
+"@livekit/rtc-node-linux-arm64-gnu@0.13.17":
+  version "0.13.17"
+  resolved "https://registry.yarnpkg.com/@livekit/rtc-node-linux-arm64-gnu/-/rtc-node-linux-arm64-gnu-0.13.17.tgz#b845972a41a0c1540478dd15dc8bc25bffc24f62"
+  integrity sha512-oZJz7qjFkz6l50StmfDxtc7Y9xnK5nITP5V+wdfgxn9t3wRKrHQMF6A/IBBLjLKPI8TykDnSWPwn9vhENkig9Q==
 
-"@livekit/rtc-node-linux-x64-gnu@0.13.14":
-  version "0.13.14"
-  resolved "https://registry.yarnpkg.com/@livekit/rtc-node-linux-x64-gnu/-/rtc-node-linux-x64-gnu-0.13.14.tgz#5a3510079c0648d7dc4b1ffe7f1c01ebb2df2be3"
-  integrity sha512-z8g2aH+pmK90sC1L+MmGghk4mSIqQZ+mnarZhw0r3NBOWa30kOH7uzGm/ehck64ATQc/8k5aouwESbkyR5M08Q==
+"@livekit/rtc-node-linux-x64-gnu@0.13.17":
+  version "0.13.17"
+  resolved "https://registry.yarnpkg.com/@livekit/rtc-node-linux-x64-gnu/-/rtc-node-linux-x64-gnu-0.13.17.tgz#5ec21afb6b23eee61949e70ea8ea3b1af0fe4ab1"
+  integrity sha512-pt6+9rBWW13FMNzzkPPiaUYTTrQrb++CF9gNl9u2wEgMXN7OajmMiLOU3nLYsdAVKYCqr9HKm6rCwybSYiLzGA==
 
-"@livekit/rtc-node-win32-x64-msvc@0.13.14":
-  version "0.13.14"
-  resolved "https://registry.yarnpkg.com/@livekit/rtc-node-win32-x64-msvc/-/rtc-node-win32-x64-msvc-0.13.14.tgz#f230334e277ab9d6daea3426c72b485f77e9479d"
-  integrity sha512-DTwNhwq6xoesT6zr19F7fnOkzBxHtLXYyhnRzK6JzieWWxclKGNaUKaBeUPvvQjOwttwYUbf6djqO78ylvDA4Q==
+"@livekit/rtc-node-win32-x64-msvc@0.13.17":
+  version "0.13.17"
+  resolved "https://registry.yarnpkg.com/@livekit/rtc-node-win32-x64-msvc/-/rtc-node-win32-x64-msvc-0.13.17.tgz#d49e0d99a70c207f3006f2b5266d8ccfd173336b"
+  integrity sha512-8y2oOoiAz6y4+0lHwV1RiImCsxPNErx038iNhZhD8pDzV3IK17VnfNtWbI1mLgjF2cm3a+UuDIOxEOpQNqEAAA==
 
-"@livekit/rtc-node@^0.13.14":
-  version "0.13.14"
-  resolved "https://registry.npmjs.org/@livekit/rtc-node/-/rtc-node-0.13.14.tgz"
-  integrity sha512-PU3mYvnY6bZwpc483Yt5aLy1Xi0GM4fj5kuv6tfvLE8w1/kOrCQ8jrHxRY/GWT9SqbB8kf8eIkA/aDtyTx+DZQ==
+"@livekit/rtc-node@^0.13.17":
+  version "0.13.17"
+  resolved "https://registry.yarnpkg.com/@livekit/rtc-node/-/rtc-node-0.13.17.tgz#5fa809e463ae97eb46a51b254d96d62808d5f119"
+  integrity sha512-vaH2E7FfVahmFdmYuqBotUo5HKD2fmPFy0kBGFnniU4dW3KXrIqMdy1M2ffSLFQGr2Pdjo0qvncJYLD4XH2tTg==
   dependencies:
     "@bufbuild/protobuf" "^1.10.0"
     "@livekit/mutex" "^1.0.0"
@@ -699,11 +691,11 @@
     pino "^9.0.0"
     pino-pretty "^13.0.0"
   optionalDependencies:
-    "@livekit/rtc-node-darwin-arm64" "0.13.14"
-    "@livekit/rtc-node-darwin-x64" "0.13.14"
-    "@livekit/rtc-node-linux-arm64-gnu" "0.13.14"
-    "@livekit/rtc-node-linux-x64-gnu" "0.13.14"
-    "@livekit/rtc-node-win32-x64-msvc" "0.13.14"
+    "@livekit/rtc-node-darwin-arm64" "0.13.17"
+    "@livekit/rtc-node-darwin-x64" "0.13.17"
+    "@livekit/rtc-node-linux-arm64-gnu" "0.13.17"
+    "@livekit/rtc-node-linux-x64-gnu" "0.13.17"
+    "@livekit/rtc-node-win32-x64-msvc" "0.13.17"
 
 "@livekit/typed-emitter@^3.0.0":
   version "3.0.0"
