@@ -7,12 +7,13 @@ import { IMessageRoutingComponent } from '../../src/logic/message-routing'
 import { createTestMetricsComponent } from '@well-known-components/metrics'
 import { metricDeclarations } from '../../src/metrics'
 import { Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
-import { ILoggerComponent } from '@well-known-components/interfaces'
+import { ILoggerComponent, IMetricsComponent } from '@well-known-components/interfaces'
 
 describe('when handling data received', () => {
   let dataReceivedHandler: IDataReceivedHandler
   let mockMessageRouting: jest.Mocked<IMessageRoutingComponent>
   let mockLogs: jest.Mocked<ILoggerComponent>
+  let mockMetrics: IMetricsComponent<keyof typeof metricDeclarations>
 
   let handleMessage: (payload: Uint8Array, participant?: any, kind?: number, topic?: string) => Promise<void>
 
@@ -27,10 +28,11 @@ describe('when handling data received', () => {
   beforeEach(async () => {
     mockMessageRouting = createTestMessageRoutingComponent()
     mockLogs = createTestLogsComponent()
+    mockMetrics = createTestMetricsComponent(metricDeclarations)
     dataReceivedHandler = await createDataReceivedHandler({
       logs: mockLogs,
       messageRouting: mockMessageRouting,
-      metrics: createTestMetricsComponent(metricDeclarations)
+      metrics: mockMetrics
     })
 
     handleMessage = dataReceivedHandler.handle(mockRoom as any, identity)
@@ -46,6 +48,8 @@ describe('when handling data received', () => {
     })
 
     encodedPayload = Packet.encode(payload).finish()
+
+    jest.spyOn(mockMetrics, 'increment')
   })
 
   describe('and the received data is valid', () => {
@@ -79,6 +83,7 @@ describe('when handling data received', () => {
       expect(mockLogs.getLogger('message-handler').error).toHaveBeenCalledWith('Error routing message', {
         error: expect.stringMatching(/Failed to decode protobuf packet/)
       })
+      expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
     })
   })
 
