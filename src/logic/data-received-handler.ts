@@ -17,7 +17,7 @@ export type IDataReceivedHandler = {
 export async function createDataReceivedHandler(
   components: Pick<AppComponents, 'logs' | 'messageRouting' | 'metrics'>
 ): Promise<IDataReceivedHandler> {
-  const { logs, messageRouting } = components
+  const { logs, messageRouting, metrics } = components
   const logger = logs.getLogger('data-received-handler')
 
   function handle(room: Room, identity: string) {
@@ -59,6 +59,7 @@ export async function createDataReceivedHandler(
       } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Unknown error'
         logger.error('Error routing message', { error: errorMessage })
+        metrics.increment('message_delivery_total', { outcome: 'failed' })
       }
     }
   }
