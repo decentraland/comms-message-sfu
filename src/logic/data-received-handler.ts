@@ -18,7 +18,7 @@ export async function createDataReceivedHandler(
   components: Pick<AppComponents, 'logs' | 'messageRouting' | 'metrics'>
 ): Promise<IDataReceivedHandler> {
   const { logs, messageRouting } = components
-  const logger = logs.getLogger('message-handler')
+  const logger = logs.getLogger('data-received-handler')
 
   function handle(room: Room, identity: string) {
     return async (

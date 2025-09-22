@@ -7,10 +7,13 @@ import { IMessageRoutingComponent } from '../../src/logic/message-routing'
 import { createTestMetricsComponent } from '@well-known-components/metrics'
 import { metricDeclarations } from '../../src/metrics'
 import { Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
+import { ILoggerComponent } from '@well-known-components/interfaces'
 
 describe('when handling data received', () => {
   let dataReceivedHandler: IDataReceivedHandler
   let mockMessageRouting: jest.Mocked<IMessageRoutingComponent>
+  let mockLogs: jest.Mocked<ILoggerComponent>
+
   let handleMessage: (payload: Uint8Array, participant?: any, kind?: number, topic?: string) => Promise<void>
 
   const identity = 'test-prefix-0'
@@ -23,9 +26,9 @@ describe('when handling data received', () => {
 
   beforeEach(async () => {
     mockMessageRouting = createTestMessageRoutingComponent()
-
+    mockLogs = createTestLogsComponent()
     dataReceivedHandler = await createDataReceivedHandler({
-      logs: createTestLogsComponent(),
+      logs: mockLogs,
       messageRouting: mockMessageRouting,
       metrics: createTestMetricsComponent(metricDeclarations)
     })
@@ -73,6 +76,9 @@ describe('when handling data received', () => {
       await handleMessage(invalidEncodedPayload, participant, kind, topic)
 
       expect(mockMessageRouting.routeMessage).not.toHaveBeenCalled()
+      expect(mockLogs.getLogger('message-handler').error).toHaveBeenCalledWith('Error routing message', {
+        error: expect.stringMatching(/Failed to decode protobuf packet/)
+      })
     })
   })
 
