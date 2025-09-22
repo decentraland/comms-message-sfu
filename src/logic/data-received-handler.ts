@@ -53,8 +53,13 @@ export async function createDataReceivedHandler(
         topic
       })
 
-      const message = fromLivekitReceivedData(payload, participant, kind, topic)
-      await messageRouting.routeMessage(room, message)
+      try {
+        const message = fromLivekitReceivedData(payload, participant, kind, topic)
+        await messageRouting.routeMessage(room, message)
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+        logger.error('Error routing message', { error: errorMessage })
+      }
     }
   }
 
