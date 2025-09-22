@@ -14,10 +14,15 @@ export function fromLivekitReceivedData(
   _kind: DataPacketKind,
   topic: string
 ): IncomingMessage {
-  return {
-    packet: Packet.decode(payload),
-    from: participant.identity,
-    communityId: topic.split(':')[1]
+  try {
+    const packet = Packet.decode(payload)
+    return {
+      packet,
+      from: participant.identity,
+      communityId: topic.split(':')[1]
+    }
+  } catch (error) {
+    throw new Error(`Failed to decode protobuf packet: ${error instanceof Error ? error.message : 'Unknown error'}`)
   }
 }
 
