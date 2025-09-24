@@ -24,7 +24,7 @@
     "tabWidth": 2
   },
   "dependencies": {
-    "@dcl/eslint-config": "^2.2.1",
+    "@dcl/eslint-config": "^2.3.0",
     "@dcl/protocol": "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-17480095113.commit-df23824.tgz",
     "@livekit/rtc-node": "^0.13.14",
     "@well-known-components/env-config-provider": "^1.2.0",
