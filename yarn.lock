@@ -273,7 +273,7 @@
   resolved "https://registry.npmjs.org/@bcoe/v8-coverage/-/v8-coverage-0.2.3.tgz"
   integrity sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==
 
-"@bufbuild/protobuf@^1.10.0", "@bufbuild/protobuf@^1.7.2":
+"@bufbuild/protobuf@^1.10.0", "@bufbuild/protobuf@^1.10.1":
   version "1.10.1"
   resolved "https://registry.npmjs.org/@bufbuild/protobuf/-/protobuf-1.10.1.tgz"
   integrity sha512-wJ8ReQbHxsAfXhrf9ixl0aYbZorRuOWpBNzm8pL8ftmSxQx/wnJD5Eg861NwJU/czy2VXFIebCeZnZrI9rktIQ==
@@ -301,13 +301,6 @@
     eslint-plugin-import "npm:eslint-plugin-i@^2.29.1"
     eslint-plugin-prettier "^5.1.3"
     prettier "^3.3.2"
-
-"@dcl/protocol@https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-15552878731.commit-bf4e21b.tgz":
-  version "1.0.0-15552878731.commit-bf4e21b"
-  resolved "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-15552878731.commit-bf4e21b.tgz#ac81345470f60bcd275babb30915ed71144a8a3e"
-  dependencies:
-    "@dcl/ts-proto" "1.154.0"
-    protobufjs "7.2.4"
 
 "@dcl/protocol@https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-17480095113.commit-df23824.tgz":
   version "1.0.0-17480095113.commit-df23824"
@@ -655,10 +648,10 @@
   resolved "https://registry.npmjs.org/@livekit/mutex/-/mutex-1.1.1.tgz"
   integrity sha512-EsshAucklmpuUAfkABPxJNhzj9v2sG7JuzFDL4ML1oJQSV14sqrpTYnsaOudMAw9yOaW53NU3QQTlUQoRs4czw==
 
-"@livekit/protocol@^1.38.0":
-  version "1.38.0"
-  resolved "https://registry.npmjs.org/@livekit/protocol/-/protocol-1.38.0.tgz"
-  integrity sha512-XX6ulvsE1XCN18LVf3ydHN7Ri1Z1M1P5dQdjnm5nVDsSqUL12Vbo/4RKcRlCEXAg2qB62mKjcaVLXVwkfXggkg==
+"@livekit/protocol@^1.42.0":
+  version "1.43.0"
+  resolved "https://registry.yarnpkg.com/@livekit/protocol/-/protocol-1.43.0.tgz#00b4e46cbb8b642b32cb681733fba3d0ead47db2"
+  integrity sha512-WCJ97fa4CBqPDh8pzdszOm/2xmelJ3Dx2vjKBlyb9BzmPQx1LjzVciP6uYFFMCMdrq2l1mjFQBXEz8Z20UCkyw==
   dependencies:
     "@bufbuild/protobuf" "^1.10.0"
 
@@ -3038,13 +3031,13 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-livekit-server-sdk@^2.13.0:
-  version "2.13.0"
-  resolved "https://registry.npmjs.org/livekit-server-sdk/-/livekit-server-sdk-2.13.0.tgz"
-  integrity sha512-fQJI/zEJRPeXKdKMkEfJNYSSnvmuPQsk2Q+X6tPfUrJPy7fnyYPax/icf/CZ8EYZQBhFgSD7WaKOYGSSfGSyZw==
+livekit-server-sdk@^2.14.1:
+  version "2.14.1"
+  resolved "https://registry.yarnpkg.com/livekit-server-sdk/-/livekit-server-sdk-2.14.1.tgz#b685cee6e31c293a022a70edb4e81f1cc4c7b059"
+  integrity sha512-kdpNXKJXps+5jzN4SmGN1w3TVSSDlS45c99R73oqz69EAlApiRT7AeEd3hAn0j2VOCFQ4tr8tegxnL+NbPA/WQ==
   dependencies:
-    "@bufbuild/protobuf" "^1.7.2"
-    "@livekit/protocol" "^1.38.0"
+    "@bufbuild/protobuf" "^1.10.1"
+    "@livekit/protocol" "^1.42.0"
     camelcase-keys "^9.0.0"
     jose "^5.1.2"
 
