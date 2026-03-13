@@ -2,6 +2,8 @@ import { AppComponents } from '../types'
 import { DataPacketKind, RemoteParticipant, Room } from '@livekit/rtc-node'
 import { Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 
+const PUBLISH_BATCH_SIZE = 100
+
 export type IncomingMessage = {
   packet: Packet
   from: string
@@ -56,12 +58,29 @@ export async function createMessageRouting(
         }
 
         const communityMembers = await db.getCommunityMembers(communityId, {
-          // TODO(enhancement): include: [online users],
           exclude: [from]
         })
 
         if (communityMembers.length === 0) {
           throw new Error('No community members found')
+        }
+
+        const connectedParticipantIdentities = new Set(room.remoteParticipants.keys())
+        const connectedMembers = communityMembers.filter((member) => connectedParticipantIdentities.has(member))
+
+        logger.info('Filtering community members by connected participants', {
+          communityId,
+          from,
+          totalCommunityMembers: communityMembers.length,
+          connectedPeersInRoom: connectedParticipantIdentities.size,
+          connectedCommunityMembers: connectedMembers.length,
+          droppedOfflineMembers: communityMembers.length - connectedMembers.length
+        })
+
+        if (connectedMembers.length === 0) {
+          throw new Error(
+            `No connected community members found (${communityMembers.length} members in DB, ${connectedParticipantIdentities.size} peers in room)`
+          )
         }
 
         const encodedPayload = Packet.encode({
@@ -75,15 +94,50 @@ export async function createMessageRouting(
           }
         }).finish()
 
-        await room.localParticipant.publishData(encodedPayload, {
-          destination_identities: communityMembers,
-          topic: `community:${communityId}`,
-          reliable: true
+        const batches = []
+        for (let i = 0; i < connectedMembers.length; i += PUBLISH_BATCH_SIZE) {
+          batches.push(connectedMembers.slice(i, i + PUBLISH_BATCH_SIZE))
+        }
+
+        logger.debug('Publishing message in batches', {
+          communityId,
+          totalRecipients: connectedMembers.length,
+          batchCount: batches.length,
+          batchSize: PUBLISH_BATCH_SIZE
         })
 
-        logger.info(
-          `Successfully routed message for community ${communityId} to ${communityMembers.length} community members from user ${from}`
-        )
+        for (let i = 0; i < batches.length; i++) {
+          const batch = batches[i]
+          try {
+            await room.localParticipant.publishData(encodedPayload, {
+              destination_identities: batch,
+              topic: `community:${communityId}`,
+              reliable: true
+            })
+
+            logger.debug('Batch published successfully', {
+              communityId,
+              batchIndex: i + 1,
+              batchTotal: batches.length,
+              recipientsInBatch: batch.length
+            })
+          } catch (batchError: any) {
+            logger.error('Failed to publish batch', {
+              communityId,
+              batchIndex: i + 1,
+              batchTotal: batches.length,
+              recipientsInBatch: batch.length,
+              error: batchError.message
+            })
+          }
+        }
+
+        logger.info('Message routed successfully', {
+          communityId,
+          from,
+          recipientCount: connectedMembers.length,
+          batchCount: batches.length
+        })
 
         metrics.increment('message_delivery_total', { outcome: 'delivered' })
       } catch (error: any) {

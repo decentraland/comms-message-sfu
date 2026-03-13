@@ -41,6 +41,7 @@ export type MockRoom = {
   localParticipant: {
     publishData: jest.Mock
   }
+  remoteParticipants: Map<string, MockRemoteParticipant>
   connectionState: MockConnectionState
 }
 
@@ -52,5 +53,6 @@ export const mockRoom: MockRoom = {
   localParticipant: {
     publishData: jest.fn()
   },
+  remoteParticipants: new Map(),
   connectionState: MockConnectionState.CONN_DISCONNECTED
 }
