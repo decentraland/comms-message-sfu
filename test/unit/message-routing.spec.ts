@@ -249,6 +249,40 @@ describe('when handling message routing', () => {
         expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'delivered' })
       })
 
+      it('should match members case-insensitively and use original LiveKit identity', async () => {
+        // DB returns lowercased addresses, LiveKit has mixed-case identities
+        mockDB.getCommunityMembers.mockResolvedValue(['0xabcdef', '0x123456'])
+        mockRoom.remoteParticipants.clear()
+        mockRoom.remoteParticipants.set('0xAbCdEf', { identity: '0xAbCdEf' })
+        mockRoom.remoteParticipants.set('0x123456', { identity: '0x123456' })
+
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        const expectedEncodedPayload = Packet.encode({
+          ...packet,
+          message: {
+            $case: 'chat',
+            chat: {
+              ...chat,
+              forwardedFrom: 'test-user'
+            }
+          }
+        }).finish()
+
+        // Should use the original LiveKit identity '0xAbCdEf', not the lowercased DB value
+        expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(expectedEncodedPayload, {
+          destination_identities: ['0xAbCdEf', '0x123456'],
+          reliable: true,
+          topic: 'community:test-community'
+        })
+      })
+
       it('should batch publish when recipients exceed batch size', async () => {
         // Set up 150 members (batch size is 100)
         const members = Array.from({ length: 150 }, (_, i) => `user-${i}`)

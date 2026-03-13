@@ -65,21 +65,25 @@ export async function createMessageRouting(
           throw new Error('No community members found')
         }
 
-        const connectedParticipantIdentities = new Set(room.remoteParticipants.keys())
-        const connectedMembers = communityMembers.filter((member) => connectedParticipantIdentities.has(member))
+        const connectedParticipantsByLowerIdentity = new Map(
+          Array.from(room.remoteParticipants.keys()).map((id) => [id.toLowerCase(), id])
+        )
+        const connectedMembers = communityMembers
+          .map((member) => connectedParticipantsByLowerIdentity.get(member.toLowerCase()))
+          .filter((identity): identity is string => identity !== undefined)
 
         logger.info('Filtering community members by connected participants', {
           communityId,
           from,
           totalCommunityMembers: communityMembers.length,
-          connectedPeersInRoom: connectedParticipantIdentities.size,
+          connectedPeersInRoom: connectedParticipantsByLowerIdentity.size,
           connectedCommunityMembers: connectedMembers.length,
           droppedOfflineMembers: communityMembers.length - connectedMembers.length
         })
 
         if (connectedMembers.length === 0) {
           throw new Error(
-            `No connected community members found (${communityMembers.length} members in DB, ${connectedParticipantIdentities.size} peers in room)`
+            `No connected community members found (${communityMembers.length} members in DB, ${connectedParticipantsByLowerIdentity.size} peers in room)`
           )
         }
 
