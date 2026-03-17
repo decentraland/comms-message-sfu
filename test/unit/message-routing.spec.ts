@@ -161,6 +161,10 @@ describe('when handling message routing', () => {
         mockDB.belongsToCommunity.mockResolvedValue(true)
         mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
 
+        // Set up remote participants so filtering finds connected members
+        mockRoom.remoteParticipants.set('user1', { identity: 'user1' })
+        mockRoom.remoteParticipants.set('user2', { identity: 'user2' })
+
         chat = Chat.create({
           message: 'Hello world',
           timestamp: Date.now()
@@ -172,6 +176,10 @@ describe('when handling message routing', () => {
             chat
           }
         })
+      })
+
+      afterEach(() => {
+        mockRoom.remoteParticipants.clear()
       })
 
       it('should route message and record metrics for successful delivery', async () => {
@@ -208,6 +216,98 @@ describe('when handling message routing', () => {
         expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'delivered' })
         expect(mockTimer.end).toHaveBeenCalled()
       })
+
+      it('should only send to connected members and skip offline ones', async () => {
+        // user2 is in the DB but not connected to the room
+        mockRoom.remoteParticipants.delete('user2')
+
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        const expectedEncodedPayload = Packet.encode({
+          ...packet,
+          message: {
+            $case: 'chat',
+            chat: {
+              ...chat,
+              forwardedFrom: 'test-user'
+            }
+          }
+        }).finish()
+
+        expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(expectedEncodedPayload, {
+          destination_identities: ['user1'],
+          reliable: true,
+          topic: 'community:test-community'
+        })
+
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'delivered' })
+      })
+
+      it('should match members case-insensitively and use original LiveKit identity', async () => {
+        // DB returns lowercased addresses, LiveKit has mixed-case identities
+        mockDB.getCommunityMembers.mockResolvedValue(['0xabcdef', '0x123456'])
+        mockRoom.remoteParticipants.clear()
+        mockRoom.remoteParticipants.set('0xAbCdEf', { identity: '0xAbCdEf' })
+        mockRoom.remoteParticipants.set('0x123456', { identity: '0x123456' })
+
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        const expectedEncodedPayload = Packet.encode({
+          ...packet,
+          message: {
+            $case: 'chat',
+            chat: {
+              ...chat,
+              forwardedFrom: 'test-user'
+            }
+          }
+        }).finish()
+
+        // Should use the original LiveKit identity '0xAbCdEf', not the lowercased DB value
+        expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(expectedEncodedPayload, {
+          destination_identities: ['0xAbCdEf', '0x123456'],
+          reliable: true,
+          topic: 'community:test-community'
+        })
+      })
+
+      it('should batch publish when recipients exceed batch size', async () => {
+        // Set up 150 members (batch size is 100)
+        const members = Array.from({ length: 150 }, (_, i) => `user-${i}`)
+        mockDB.getCommunityMembers.mockResolvedValue(members)
+        mockRoom.remoteParticipants.clear()
+        for (const member of members) {
+          mockRoom.remoteParticipants.set(member, { identity: member })
+        }
+
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        expect(mockRoom.localParticipant.publishData).toHaveBeenCalledTimes(2)
+
+        // First batch: 100 recipients
+        expect(mockRoom.localParticipant.publishData.mock.calls[0][1].destination_identities).toHaveLength(100)
+
+        // Second batch: 50 recipients
+        expect(mockRoom.localParticipant.publishData.mock.calls[1][1].destination_identities).toHaveLength(50)
+      })
     })
 
     describe('when community has no members', () => {
@@ -236,6 +336,37 @@ describe('when handling message routing', () => {
 
         expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
         expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+        expect(mockTimer.end).toHaveBeenCalled()
+      })
+    })
+
+    describe('when community members exist but none are connected', () => {
+      beforeEach(() => {
+        mockDB.belongsToCommunity.mockResolvedValue(true)
+        mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
+        mockRoom.remoteParticipants.clear()
+      })
+
+      it('should record metrics for failed delivery', async () => {
+        const packet = Packet.create({
+          message: {
+            $case: 'chat',
+            chat: {
+              message: 'Hello world',
+              timestamp: Date.now()
+            }
+          }
+        })
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
         expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
         expect(mockTimer.end).toHaveBeenCalled()
       })
