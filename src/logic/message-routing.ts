@@ -8,6 +8,8 @@ export type IncomingMessage = {
   communityId: string
 }
 
+const PUBLISH_BATCH_SIZE = 100
+
 export function fromLivekitReceivedData(
   payload: Uint8Array<ArrayBufferLike>,
   participant: RemoteParticipant,
@@ -64,6 +66,18 @@ export async function createMessageRouting(
           throw new Error('No community members found')
         }
 
+        const batches = []
+        for (let i = 0; i < communityMembers.length; i += PUBLISH_BATCH_SIZE) {
+          batches.push(communityMembers.slice(i, i + PUBLISH_BATCH_SIZE))
+        }
+
+        logger.debug('Publishing message in batches', {
+          communityId,
+          totalRecipients: communityMembers.length,
+          batchCount: batches.length,
+          batchSize: PUBLISH_BATCH_SIZE
+        })
+
         const encodedPayload = Packet.encode({
           ...packet,
           message: {
@@ -75,11 +89,31 @@ export async function createMessageRouting(
           }
         }).finish()
 
-        await room.localParticipant.publishData(encodedPayload, {
-          destination_identities: communityMembers,
-          topic: `community:${communityId}`,
-          reliable: true
-        })
+        for (let i = 0; i < batches.length; i++) {
+          const batch = batches[i]
+          try {
+            await room.localParticipant.publishData(encodedPayload, {
+              destination_identities: batch,
+              topic: `community:${communityId}`,
+              reliable: true
+            })
+
+            logger.debug('Batch published successfully', {
+              communityId,
+              batchIndex: i + 1,
+              batchTotal: batches.length,
+              recipientsInBatch: batch.length
+            })
+          } catch (batchError: any) {
+            logger.error('Failed to publish batch', {
+              communityId,
+              batchIndex: i + 1,
+              batchTotal: batches.length,
+              recipientsInBatch: batch.length,
+              error: batchError.message
+            })
+          }
+        }
 
         logger.info(
           `Successfully routed message for community ${communityId} to ${communityMembers.length} community members from user ${from}`
