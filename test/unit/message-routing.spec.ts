@@ -9,7 +9,7 @@ import { IDatabaseComponent } from '../../src/adapters/db'
 import { createTestLogsComponent } from '../mocks/components'
 import { MockRoom, mockRoom } from '../mocks/livekit'
 import { metricDeclarations } from '../../src/metrics'
-import { Chat, Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
+import { Chat, ChatReaction, Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 
 describe('when handling message routing', () => {
   let messageRouting: IMessageRoutingComponent
@@ -39,13 +39,38 @@ describe('when handling message routing', () => {
   })
 
   describe('when transforming Livekit data', () => {
-    it('should transform Livekit data into an IncomingMessage', () => {
+    it('should transform Livekit chat data into an IncomingMessage', () => {
       const packet = Packet.create({
         message: {
           $case: 'chat',
           chat: {
             message: 'Hello world',
             timestamp: Date.now()
+          }
+        }
+      })
+      const payload = Packet.encode(packet).finish()
+      const participant = { identity: 'test-user' }
+      const kind = 1 // KIND_LOSSY
+      const topic = 'community:test-community'
+
+      const message = fromLivekitReceivedData(payload, participant as any, kind, topic)
+
+      expect(message).toEqual({
+        packet,
+        from: 'test-user',
+        communityId: 'test-community'
+      })
+    })
+
+    it('should transform Livekit chatReaction data into an IncomingMessage', () => {
+      const packet = Packet.create({
+        message: {
+          $case: 'chatReaction',
+          chatReaction: {
+            emojiIndex: 1,
+            messageId: 'msg-123',
+            address: '0xSenderAddress'
           }
         }
       })
@@ -298,6 +323,80 @@ describe('when handling message routing', () => {
 
         expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
         expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+        expect(mockTimer.end).toHaveBeenCalled()
+      })
+    })
+
+    describe('when routing chatReaction messages', () => {
+      let chatReaction: ChatReaction
+      let packet: Packet
+
+      beforeEach(() => {
+        mockDB.belongsToCommunity.mockResolvedValue(true)
+        mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
+
+        chatReaction = ChatReaction.create({
+          emojiIndex: 1,
+          messageId: 'msg-123',
+          address: '0xOriginalAddress'
+        })
+
+        packet = Packet.create({
+          message: {
+            $case: 'chatReaction',
+            chatReaction
+          }
+        })
+      })
+
+      it('should route chatReaction and overwrite address with verified sender identity', async () => {
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        expect(mockDB.getCommunityMembers).toHaveBeenCalledWith('test-community', {
+          exclude: ['test-user']
+        })
+
+        const expectedEncodedPayload = Packet.encode({
+          ...packet,
+          message: {
+            $case: 'chatReaction',
+            chatReaction: {
+              ...chatReaction,
+              address: 'test-user'
+            }
+          }
+        }).finish()
+
+        expect(mockRoom.localParticipant.publishData).toHaveBeenCalledWith(expectedEncodedPayload, {
+          destination_identities: ['user1', 'user2'],
+          reliable: true,
+          topic: 'community:test-community'
+        })
+
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'delivered' })
+        expect(mockTimer.end).toHaveBeenCalled()
+      })
+
+      it('should reject chatReaction from non-member', async () => {
+        mockDB.belongsToCommunity.mockResolvedValue(false)
+
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        expect(mockDB.belongsToCommunity).toHaveBeenCalledWith('test-community', 'test-user')
+        expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
         expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
         expect(mockTimer.end).toHaveBeenCalled()
       })

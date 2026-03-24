@@ -302,9 +302,9 @@
     eslint-plugin-prettier "^5.1.3"
     prettier "^3.3.2"
 
-"@dcl/protocol@https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-17480095113.commit-df23824.tgz":
-  version "1.0.0-17480095113.commit-df23824"
-  resolved "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-17480095113.commit-df23824.tgz#2c286c9d1af1fc46837100c8c02bcaa0bb2885cf"
+"@dcl/protocol@https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-22997207545.commit-32bf1fb.tgz":
+  version "1.0.0-22997207545.commit-32bf1fb"
+  resolved "https://sdk-team-cdn.decentraland.org/@dcl/protocol/branch//dcl-protocol-1.0.0-22997207545.commit-32bf1fb.tgz#a87e26f49b30180bec23ca2010669f2c23c8c8a5"
   dependencies:
     "@dcl/ts-proto" "1.154.0"
     protobufjs "7.2.4"
