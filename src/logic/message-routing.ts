@@ -48,7 +48,7 @@ export async function createMessageRouting(
           throw new Error('No local participant available')
         }
 
-        if (packet.message?.$case !== 'chat') {
+        if (packet.message?.$case !== 'chat' && packet.message?.$case !== 'chatReaction') {
           throw new Error('Invalid message type')
         }
 
@@ -78,15 +78,14 @@ export async function createMessageRouting(
           batchSize: PUBLISH_BATCH_SIZE
         })
 
+        const innerMessage =
+          packet.message.$case === 'chat'
+            ? { $case: 'chat' as const, chat: { ...packet.message.chat, forwardedFrom: from } }
+            : { $case: 'chatReaction' as const, chatReaction: { ...packet.message.chatReaction, address: from } }
+
         const encodedPayload = Packet.encode({
           ...packet,
-          message: {
-            ...packet.message,
-            chat: {
-              ...packet.message.chat,
-              forwardedFrom: from
-            }
-          }
+          message: innerMessage
         }).finish()
 
         for (let i = 0; i < batches.length; i++) {
