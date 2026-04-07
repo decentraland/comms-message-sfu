@@ -3031,10 +3031,10 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-livekit-server-sdk@^2.15.0:
-  version "2.15.0"
-  resolved "https://registry.yarnpkg.com/livekit-server-sdk/-/livekit-server-sdk-2.15.0.tgz#bb356e821b3ccdfbec90b7cdfe91fa5a00ccb862"
-  integrity sha512-HmzjWnwEwwShu8yUf7VGFXdc+BuMJR5pnIY4qsdlhqI9d9wDgq+4cdTEHg0NEBaiGnc6PCOBiaTYgmIyVJ0S9w==
+livekit-server-sdk@^2.15.1:
+  version "2.15.1"
+  resolved "https://registry.yarnpkg.com/livekit-server-sdk/-/livekit-server-sdk-2.15.1.tgz#153c81895a0580d7866990bc2090e8dcf50911c0"
+  integrity sha512-kfhXkNxbDIKXF9pFxEYVjWjU+YAA7MQZ2qcyUCgassNplt2gQzQKnIjQz9RpIEWLAIDs8i/4lxJO0mENbjQ35Q==
   dependencies:
     "@bufbuild/protobuf" "^1.10.1"
     "@livekit/protocol" "^1.43.1"
