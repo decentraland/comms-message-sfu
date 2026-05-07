@@ -7,7 +7,7 @@ import {
 } from '../../src/logic/message-routing'
 import { IDatabaseComponent } from '../../src/adapters/db'
 import { createTestLogsComponent } from '../mocks/components'
-import { MockRoom, mockRoom } from '../mocks/livekit'
+import { MockConnectionState, MockRoom, mockRoom } from '../mocks/livekit'
 import { metricDeclarations } from '../../src/metrics'
 import { Chat, ChatReaction, Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 
@@ -90,6 +90,10 @@ describe('when handling message routing', () => {
   })
 
   describe('when routing messages', () => {
+    beforeEach(() => {
+      mockRoom.connectionState = MockConnectionState.CONN_CONNECTED
+    })
+
     it('should start a timer to record message delivery latency', async () => {
       const packet = Packet.create({
         message: {
@@ -292,6 +296,68 @@ describe('when handling message routing', () => {
         expect(mockDB.belongsToCommunity).toHaveBeenCalledWith('test-community', 'test-user')
         expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
         expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+        expect(mockTimer.end).toHaveBeenCalled()
+      })
+    })
+
+    describe('and the room becomes disconnected before publish', () => {
+      beforeEach(() => {
+        mockDB.belongsToCommunity.mockResolvedValue(true)
+        mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
+        mockRoom.connectionState = MockConnectionState.CONN_DISCONNECTED
+      })
+
+      it('should skip publishData and record metrics for failed delivery', async () => {
+        const packet = Packet.create({
+          message: {
+            $case: 'chat',
+            chat: {
+              message: 'Hello world',
+              timestamp: Date.now()
+            }
+          }
+        })
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+        expect(mockTimer.end).toHaveBeenCalled()
+      })
+    })
+
+    describe('and the room is reconnecting before publish', () => {
+      beforeEach(() => {
+        mockDB.belongsToCommunity.mockResolvedValue(true)
+        mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
+        mockRoom.connectionState = MockConnectionState.CONN_RECONNECTING
+      })
+
+      it('should skip publishData and record metrics for failed delivery', async () => {
+        const packet = Packet.create({
+          message: {
+            $case: 'chat',
+            chat: {
+              message: 'Hello world',
+              timestamp: Date.now()
+            }
+          }
+        })
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
         expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
         expect(mockTimer.end).toHaveBeenCalled()
       })
