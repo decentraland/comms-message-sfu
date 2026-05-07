@@ -7,7 +7,7 @@ import {
 } from '../../src/logic/message-routing'
 import { IDatabaseComponent } from '../../src/adapters/db'
 import { createTestLogsComponent } from '../mocks/components'
-import { MockRoom, mockRoom } from '../mocks/livekit'
+import { MockConnectionState, MockRoom, mockRoom } from '../mocks/livekit'
 import { metricDeclarations } from '../../src/metrics'
 import { Chat, ChatReaction, Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 
@@ -90,6 +90,10 @@ describe('when handling message routing', () => {
   })
 
   describe('when routing messages', () => {
+    beforeEach(() => {
+      mockRoom.connectionState = MockConnectionState.CONN_CONNECTED
+    })
+
     it('should start a timer to record message delivery latency', async () => {
       const packet = Packet.create({
         message: {
@@ -292,6 +296,78 @@ describe('when handling message routing', () => {
         expect(mockDB.belongsToCommunity).toHaveBeenCalledWith('test-community', 'test-user')
         expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
         expect(mockMetrics.startTimer).toHaveBeenCalledWith('message_delivery_latency')
+        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+        expect(mockTimer.end).toHaveBeenCalled()
+      })
+    })
+
+    describe('and the room is not connected at routing time', () => {
+      const nonConnectedStates: Array<[string, MockConnectionState]> = [
+        ['disconnected', MockConnectionState.CONN_DISCONNECTED],
+        ['reconnecting', MockConnectionState.CONN_RECONNECTING]
+      ]
+
+      it.each(nonConnectedStates)(
+        'should skip database lookups and publishData and record metrics for failed delivery when state is %s',
+        async (_label, state) => {
+          mockRoom.connectionState = state
+          const packet = Packet.create({
+            message: {
+              $case: 'chat',
+              chat: {
+                message: 'Hello world',
+                timestamp: Date.now()
+              }
+            }
+          })
+          const message: IncomingMessage = {
+            packet,
+            from: 'test-user',
+            communityId: 'test-community'
+          }
+
+          await messageRouting.routeMessage(mockRoom as any, message)
+
+          expect(mockDB.belongsToCommunity).not.toHaveBeenCalled()
+          expect(mockDB.getCommunityMembers).not.toHaveBeenCalled()
+          expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
+          expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+          expect(mockTimer.end).toHaveBeenCalled()
+        }
+      )
+    })
+
+    describe('and the room transitions out of connected after database lookups but before publish', () => {
+      beforeEach(() => {
+        mockDB.belongsToCommunity.mockResolvedValue(true)
+        // Flip the connection state during the members lookup so the per-batch guard
+        // is exercised — the early check passes but the publish-time check should bail.
+        mockDB.getCommunityMembers.mockImplementation(async () => {
+          mockRoom.connectionState = MockConnectionState.CONN_RECONNECTING
+          return ['user1', 'user2']
+        })
+      })
+
+      it('should skip publishData and record metrics for failed delivery', async () => {
+        const packet = Packet.create({
+          message: {
+            $case: 'chat',
+            chat: {
+              message: 'Hello world',
+              timestamp: Date.now()
+            }
+          }
+        })
+        const message: IncomingMessage = {
+          packet,
+          from: 'test-user',
+          communityId: 'test-community'
+        }
+
+        await messageRouting.routeMessage(mockRoom as any, message)
+
+        expect(mockDB.getCommunityMembers).toHaveBeenCalled()
+        expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
         expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
         expect(mockTimer.end).toHaveBeenCalled()
       })

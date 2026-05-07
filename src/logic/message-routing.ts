@@ -1,5 +1,5 @@
 import { AppComponents } from '../types'
-import { DataPacketKind, RemoteParticipant, Room } from '@livekit/rtc-node'
+import { ConnectionState, DataPacketKind, RemoteParticipant, Room } from '@livekit/rtc-node'
 import { Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 
 export type IncomingMessage = {
@@ -52,6 +52,10 @@ export async function createMessageRouting(
           throw new Error('Invalid message type')
         }
 
+        if (room.connectionState !== ConnectionState.CONN_CONNECTED) {
+          throw new Error(`Room not connected (state=${room.connectionState}); aborting routing`)
+        }
+
         const isMember = await db.belongsToCommunity(communityId, from)
         if (!isMember) {
           throw new Error(`User ${from} is not a member of community ${communityId}, skipping message routing`)
@@ -90,6 +94,12 @@ export async function createMessageRouting(
 
         for (let i = 0; i < batches.length; i++) {
           const batch = batches[i]
+          // Guard against publishing on a Room whose native state is being torn down
+          // by a concurrent reconnect — calling publishData on a disconnected/reconnecting
+          // Room can SIGSEGV inside @livekit/rtc-node.
+          if (room.connectionState !== ConnectionState.CONN_CONNECTED) {
+            throw new Error(`Room not connected (state=${room.connectionState}); aborting publish`)
+          }
           try {
             await room.localParticipant.publishData(encodedPayload, {
               destination_identities: batch,
