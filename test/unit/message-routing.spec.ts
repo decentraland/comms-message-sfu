@@ -301,42 +301,51 @@ describe('when handling message routing', () => {
       })
     })
 
-    describe('and the room becomes disconnected before publish', () => {
-      beforeEach(() => {
-        mockDB.belongsToCommunity.mockResolvedValue(true)
-        mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
-        mockRoom.connectionState = MockConnectionState.CONN_DISCONNECTED
-      })
+    describe('and the room is not connected at routing time', () => {
+      const nonConnectedStates: Array<[string, MockConnectionState]> = [
+        ['disconnected', MockConnectionState.CONN_DISCONNECTED],
+        ['reconnecting', MockConnectionState.CONN_RECONNECTING]
+      ]
 
-      it('should skip publishData and record metrics for failed delivery', async () => {
-        const packet = Packet.create({
-          message: {
-            $case: 'chat',
-            chat: {
-              message: 'Hello world',
-              timestamp: Date.now()
+      it.each(nonConnectedStates)(
+        'should skip database lookups and publishData and record metrics for failed delivery when state is %s',
+        async (_label, state) => {
+          mockRoom.connectionState = state
+          const packet = Packet.create({
+            message: {
+              $case: 'chat',
+              chat: {
+                message: 'Hello world',
+                timestamp: Date.now()
+              }
             }
+          })
+          const message: IncomingMessage = {
+            packet,
+            from: 'test-user',
+            communityId: 'test-community'
           }
-        })
-        const message: IncomingMessage = {
-          packet,
-          from: 'test-user',
-          communityId: 'test-community'
+
+          await messageRouting.routeMessage(mockRoom as any, message)
+
+          expect(mockDB.belongsToCommunity).not.toHaveBeenCalled()
+          expect(mockDB.getCommunityMembers).not.toHaveBeenCalled()
+          expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
+          expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
+          expect(mockTimer.end).toHaveBeenCalled()
         }
-
-        await messageRouting.routeMessage(mockRoom as any, message)
-
-        expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
-        expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
-        expect(mockTimer.end).toHaveBeenCalled()
-      })
+      )
     })
 
-    describe('and the room is reconnecting before publish', () => {
+    describe('and the room transitions out of connected after database lookups but before publish', () => {
       beforeEach(() => {
         mockDB.belongsToCommunity.mockResolvedValue(true)
-        mockDB.getCommunityMembers.mockResolvedValue(['user1', 'user2'])
-        mockRoom.connectionState = MockConnectionState.CONN_RECONNECTING
+        // Flip the connection state during the members lookup so the per-batch guard
+        // is exercised — the early check passes but the publish-time check should bail.
+        mockDB.getCommunityMembers.mockImplementation(async () => {
+          mockRoom.connectionState = MockConnectionState.CONN_RECONNECTING
+          return ['user1', 'user2']
+        })
       })
 
       it('should skip publishData and record metrics for failed delivery', async () => {
@@ -357,6 +366,7 @@ describe('when handling message routing', () => {
 
         await messageRouting.routeMessage(mockRoom as any, message)
 
+        expect(mockDB.getCommunityMembers).toHaveBeenCalled()
         expect(mockRoom.localParticipant.publishData).not.toHaveBeenCalled()
         expect(mockMetrics.increment).toHaveBeenCalledWith('message_delivery_total', { outcome: 'failed' })
         expect(mockTimer.end).toHaveBeenCalled()

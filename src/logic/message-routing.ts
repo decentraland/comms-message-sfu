@@ -52,6 +52,10 @@ export async function createMessageRouting(
           throw new Error('Invalid message type')
         }
 
+        if (room.connectionState !== ConnectionState.CONN_CONNECTED) {
+          throw new Error(`Room not connected (state=${room.connectionState}); aborting routing`)
+        }
+
         const isMember = await db.belongsToCommunity(communityId, from)
         if (!isMember) {
           throw new Error(`User ${from} is not a member of community ${communityId}, skipping message routing`)
