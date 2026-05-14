@@ -308,9 +308,9 @@
     prettier "^3.3.2"
 
 "@dcl/protocol@experimental":
-  version "1.0.0-24513643863.commit-4851fd6"
-  resolved "https://registry.yarnpkg.com/@dcl/protocol/-/protocol-1.0.0-24513643863.commit-4851fd6.tgz#740cd0be97d3294a8df2117b8c1a17f72ac7bffe"
-  integrity sha512-AbQ1exc37Uve3N7egafyBnJbIfH7Ppyq6iGMYVZgGnNNuWXhV0RIv3bNV9CMEYWE/E0Ryjq4Ngzst2MWfIVtog==
+  version "1.0.0-25825802864.commit-1efee00"
+  resolved "https://registry.yarnpkg.com/@dcl/protocol/-/protocol-1.0.0-25825802864.commit-1efee00.tgz#28b1072aba7f130b1e2017de57dae8b1c275d727"
+  integrity sha512-cgPwY0YdkRT/yaOQAYgH54+0TNbyKWt2tinprClIQUP2OKb05I/B1mqgxRNRTmAzo/RWA+uuLsLD0F2wb8Y8Zg==
   dependencies:
     "@dcl/ts-proto" "1.154.0"
     protobufjs "7.2.4"
