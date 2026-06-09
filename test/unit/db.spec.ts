@@ -40,8 +40,8 @@ describe('when handling database component', () => {
 
       expect(mockPg.query).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: expect.stringContaining("AND cm.member_address IN ('0x123','0x456')"),
-          values: [communityId]
+          text: expect.stringContaining('AND cm.member_address = ANY('),
+          values: [communityId, ['0x123', '0x456']]
         })
       )
       expect(members).toEqual(['0x123', '0x456'])
@@ -58,8 +58,8 @@ describe('when handling database component', () => {
 
       expect(mockPg.query).toHaveBeenCalledWith(
         expect.objectContaining({
-          text: expect.stringContaining("AND cm.member_address NOT IN ('0x789')"),
-          values: [communityId]
+          text: expect.stringContaining('AND cm.member_address <> ALL('),
+          values: [communityId, ['0x789']]
         })
       )
       expect(members).toEqual(['0x123', '0x456'])
@@ -76,9 +76,9 @@ describe('when handling database component', () => {
       const members = await db.getCommunityMembers(communityId, { include, exclude })
 
       const queryCall = mockPg.query.mock.calls[0][0]
-      expect(queryCall.text).toContain("AND cm.member_address IN ('0x123','0x456')")
-      expect(queryCall.text).toContain("AND cm.member_address NOT IN ('0x789')")
-      expect(queryCall.values).toEqual([communityId])
+      expect(queryCall.text).toContain('AND cm.member_address = ANY(')
+      expect(queryCall.text).toContain('AND cm.member_address <> ALL(')
+      expect(queryCall.values).toEqual([communityId, include, exclude])
       expect(members).toEqual(['0x123', '0x456'])
     })
 
