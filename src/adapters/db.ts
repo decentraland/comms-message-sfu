@@ -29,20 +29,20 @@ export async function createDBComponent(components: Pick<AppComponents, 'pg'>): 
       exclude?: string[]
     }
   ) => {
-    const includeAddresses = options?.include?.map((address) => `'${address.toLowerCase()}'`)
-    const excludeAddresses = options?.exclude?.map((address) => `'${address.toLowerCase()}'`)
+    const includeAddresses = options?.include?.map((address) => address.toLowerCase())
+    const excludeAddresses = options?.exclude?.map((address) => address.toLowerCase())
 
     const query = SQL`
       SELECT LOWER(cm.member_address) as address FROM communities c
       LEFT JOIN community_members cm ON cm.community_id = c.id
       WHERE c.id = ${communityId} AND c.active = TRUE`
 
-    if (includeAddresses) {
-      query.append(` AND cm.member_address IN (${includeAddresses.join(',')})`)
+    if (includeAddresses && includeAddresses.length > 0) {
+      query.append(SQL` AND cm.member_address = ANY(${includeAddresses})`)
     }
 
-    if (excludeAddresses) {
-      query.append(` AND cm.member_address NOT IN (${excludeAddresses.join(',')})`)
+    if (excludeAddresses && excludeAddresses.length > 0) {
+      query.append(SQL` AND cm.member_address <> ALL(${excludeAddresses})`)
     }
 
     const result = await pg.query(query)
