@@ -654,10 +654,10 @@
   resolved "https://registry.npmjs.org/@livekit/mutex/-/mutex-1.1.1.tgz"
   integrity sha512-EsshAucklmpuUAfkABPxJNhzj9v2sG7JuzFDL4ML1oJQSV14sqrpTYnsaOudMAw9yOaW53NU3QQTlUQoRs4czw==
 
-"@livekit/protocol@^1.43.1":
-  version "1.43.4"
-  resolved "https://registry.yarnpkg.com/@livekit/protocol/-/protocol-1.43.4.tgz#e258f91a98901d583e8d6ef7904940ebba2e44ba"
-  integrity sha512-mJDFt/p+G2OKmIGizYiACK7Jb06wd42m9Pe7Y9cAOfdYpvwCqHlw4yul5Z7iRU3VKPsYJ27WL3oeHEoiu+HuAA==
+"@livekit/protocol@^1.45.6":
+  version "1.45.8"
+  resolved "https://registry.yarnpkg.com/@livekit/protocol/-/protocol-1.45.8.tgz#8314925fcd285f3fe5e3cc3b38110dbc4ed77d8f"
+  integrity sha512-Q+l57E7w/xxOBFVWzdX5rkAZO7ffyF+rlDzNUYq2SU114+5aTyCq+PK4unaEVDNd4952Af7wteKr3sOgasGuaA==
   dependencies:
     "@bufbuild/protobuf" "^1.10.0"
 
@@ -3045,13 +3045,13 @@ lines-and-columns@^1.1.6:
   resolved "https://registry.npmjs.org/lines-and-columns/-/lines-and-columns-1.2.4.tgz"
   integrity sha512-7ylylesZQ/PV29jhEDl3Ufjo6ZX7gCqJr5F7PKrqc93v7fzSymt1BpwEU8nAUXs8qzzvqhbjhK5QZg6Mt/HkBg==
 
-livekit-server-sdk@^2.15.0:
-  version "2.15.0"
-  resolved "https://registry.yarnpkg.com/livekit-server-sdk/-/livekit-server-sdk-2.15.0.tgz#bb356e821b3ccdfbec90b7cdfe91fa5a00ccb862"
-  integrity sha512-HmzjWnwEwwShu8yUf7VGFXdc+BuMJR5pnIY4qsdlhqI9d9wDgq+4cdTEHg0NEBaiGnc6PCOBiaTYgmIyVJ0S9w==
+livekit-server-sdk@^2.15.3:
+  version "2.15.3"
+  resolved "https://registry.yarnpkg.com/livekit-server-sdk/-/livekit-server-sdk-2.15.3.tgz#a17cf729f85457cd4f2c45e92127b95f80b0b896"
+  integrity sha512-CU+CaOsyiKR/8BW7myJ2LGNg7T66MV/HZx+AMeAiiGu8PQnVDwqJ42HEH61o20fH68e4cI+hYQcPA5Fs2aKv1g==
   dependencies:
     "@bufbuild/protobuf" "^1.10.1"
-    "@livekit/protocol" "^1.43.1"
+    "@livekit/protocol" "^1.45.6"
     camelcase-keys "^9.0.0"
     jose "^5.1.2"
 
