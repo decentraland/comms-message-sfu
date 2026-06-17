@@ -14,7 +14,7 @@ export const metricDeclarations = {
   message_delivery_total: {
     type: IMetricsComponent.CounterType,
     help: 'Total number of messages processed',
-    labelNames: ['outcome'] // delivered, failed
+    labelNames: ['outcome'] // delivered, failed, rejected_oversized, rate_limited
   },
   livekit_connection_status: {
     type: IMetricsComponent.GaugeType,

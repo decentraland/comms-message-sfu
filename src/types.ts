@@ -10,6 +10,7 @@ import { metricDeclarations } from './metrics'
 import { IPgComponent } from '@well-known-components/pg-component'
 import { IDatabaseComponent } from './adapters/db'
 import { ILivekitComponent } from './adapters/livekit'
+import { IRateLimiterComponent } from './adapters/rate-limiter'
 import { IMessageRoutingComponent } from './logic/message-routing'
 import { IDataReceivedHandler } from './logic/data-received-handler'
 import { IReconnectedHandler } from './logic/connection-handlers/reconnected'
@@ -35,6 +36,7 @@ export type AppComponents = BaseComponents & {
   pg: IPgComponent
   db: IDatabaseComponent
   livekit: ILivekitComponent
+  rateLimiter: IRateLimiterComponent
   messageRouting: IMessageRoutingComponent
   dataReceivedHandler: IDataReceivedHandler
   connectedHandler: IConnectedHandler
