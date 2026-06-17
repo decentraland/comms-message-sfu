@@ -15,10 +15,14 @@ export type IDataReceivedHandler = {
 }
 
 export async function createDataReceivedHandler(
-  components: Pick<AppComponents, 'logs' | 'messageRouting' | 'metrics'>
+  components: Pick<AppComponents, 'config' | 'logs' | 'messageRouting' | 'metrics' | 'rateLimiter'>
 ): Promise<IDataReceivedHandler> {
-  const { logs, messageRouting, metrics } = components
+  const { config, logs, messageRouting, metrics, rateLimiter } = components
   const logger = logs.getLogger('data-received-handler')
+
+  // Cap incoming payloads before decoding so a participant cannot amplify load with oversized
+  // packets. Chat/chatReaction packets are tiny, so the default leaves ample headroom.
+  const maxPacketSizeInBytes = (await config.getNumber('MAX_PACKET_SIZE_BYTES')) ?? 8192
 
   function handle(room: Room, identity: string) {
     return async (
@@ -44,6 +48,22 @@ export async function createDataReceivedHandler(
 
       if (!topic) {
         logger.error('No community id provided in the topic')
+        return
+      }
+
+      if (payload.byteLength > maxPacketSizeInBytes) {
+        logger.warn('Dropping oversized data packet', {
+          from: participant.identity,
+          sizeInBytes: payload.byteLength,
+          maxPacketSizeInBytes
+        })
+        metrics.increment('message_delivery_total', { outcome: 'rejected_oversized' })
+        return
+      }
+
+      if (!rateLimiter.isAllowed(participant.identity)) {
+        logger.warn('Rate limit exceeded, dropping data packet', { from: participant.identity })
+        metrics.increment('message_delivery_total', { outcome: 'rate_limited' })
         return
       }
 

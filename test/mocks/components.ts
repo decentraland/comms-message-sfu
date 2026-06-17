@@ -1,6 +1,7 @@
-import { ILoggerComponent } from '@well-known-components/interfaces'
+import { IConfigComponent, ILoggerComponent } from '@well-known-components/interfaces'
 import { IPgComponent } from '@well-known-components/pg-component'
 import { IDatabaseComponent } from '../../src/adapters/db'
+import { IRateLimiterComponent } from '../../src/adapters/rate-limiter'
 import { IMessageRoutingComponent } from '../../src/logic/message-routing'
 
 export function createTestDBComponent(): jest.Mocked<IDatabaseComponent> {
@@ -25,6 +26,27 @@ export function createTestLogsComponent(): jest.Mocked<ILoggerComponent> {
 export function createTestMessageRoutingComponent(): jest.Mocked<IMessageRoutingComponent> {
   return {
     routeMessage: jest.fn()
+  }
+}
+
+export function createTestRateLimiterComponent(): jest.Mocked<IRateLimiterComponent> {
+  return {
+    isAllowed: jest.fn().mockReturnValue(true)
+  } as jest.Mocked<IRateLimiterComponent>
+}
+
+export function createTestConfigComponent(values: Record<string, string | number> = {}): jest.Mocked<IConfigComponent> {
+  return {
+    getString: jest.fn(async (name: string) => {
+      const value = values[name]
+      return value === undefined ? undefined : String(value)
+    }),
+    getNumber: jest.fn(async (name: string) => {
+      const value = values[name]
+      return value === undefined ? undefined : Number(value)
+    }),
+    requireString: jest.fn(async (name: string) => String(values[name])),
+    requireNumber: jest.fn(async (name: string) => Number(values[name]))
   }
 }
 

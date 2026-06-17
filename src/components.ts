@@ -11,6 +11,7 @@ import { metricDeclarations } from './metrics'
 import { createPgComponent } from '@well-known-components/pg-component'
 import { createDBComponent } from './adapters/db'
 import { createLivekitComponent } from './adapters/livekit'
+import { createRateLimiterComponent } from './adapters/rate-limiter'
 import { createMessageRouting } from './logic/message-routing'
 import { createDataReceivedHandler } from './logic/data-received-handler'
 import { createConnectedHandler } from './logic/connection-handlers/connected'
@@ -40,8 +41,9 @@ export async function initComponents(): Promise<AppComponents> {
   const pg = await createPgComponent({ logs, config, metrics })
   const db = await createDBComponent({ pg })
 
+  const rateLimiter = await createRateLimiterComponent({ config, logs })
   const messageRouting = await createMessageRouting({ db, logs, metrics })
-  const dataReceivedHandler = await createDataReceivedHandler({ logs, messageRouting, metrics })
+  const dataReceivedHandler = await createDataReceivedHandler({ config, logs, messageRouting, metrics, rateLimiter })
   const connectedHandler = await createConnectedHandler({ logs, metrics })
   const reconnectingHandler = await createReconnectingHandler({ logs, metrics })
   const reconnectedHandler = await createReconnectedHandler({ logs, metrics })
@@ -66,6 +68,7 @@ export async function initComponents(): Promise<AppComponents> {
     pg,
     db,
     livekit,
+    rateLimiter,
     messageRouting,
     dataReceivedHandler,
     connectedHandler,
