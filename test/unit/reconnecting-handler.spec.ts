@@ -1,6 +1,6 @@
 import { createReconnectingHandler } from '../../src/logic/connection-handlers/reconnecting'
 import { createTestLogsComponent } from '../mocks/components'
-import { createTestMetricsComponent } from '@well-known-components/metrics'
+import { createTestMetricsComponent } from '@dcl/metrics'
 import { metricDeclarations } from '../../src/metrics'
 
 describe('when handling reconnecting event', () => {

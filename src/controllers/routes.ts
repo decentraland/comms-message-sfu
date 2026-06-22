@@ -1,4 +1,4 @@
-import { Router } from '@well-known-components/http-server'
+import { Router } from '@dcl/http-server'
 import { GlobalContext } from '../types'
 
 // We return the entire router because it will be easier to test than a whole server

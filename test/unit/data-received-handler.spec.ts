@@ -10,7 +10,7 @@ import {
 import { mockRoom } from '../mocks/livekit'
 import { IMessageRoutingComponent } from '../../src/logic/message-routing'
 import { IRateLimiterComponent } from '../../src/adapters/rate-limiter'
-import { createTestMetricsComponent } from '@well-known-components/metrics'
+import { createTestMetricsComponent } from '@dcl/metrics'
 import { metricDeclarations } from '../../src/metrics'
 import { Packet } from '@dcl/protocol/out-js/decentraland/kernel/comms/rfc4/comms.gen'
 import { IConfigComponent, ILoggerComponent, IMetricsComponent } from '@well-known-components/interfaces'

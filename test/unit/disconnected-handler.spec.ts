@@ -1,6 +1,6 @@
 import { createDisconnectedHandler, IDisconnectedHandler } from '../../src/logic/connection-handlers/disconnected'
 import { createTestLogsComponent } from '../mocks/components'
-import { createTestMetricsComponent } from '@well-known-components/metrics'
+import { createTestMetricsComponent } from '@dcl/metrics'
 import { metricDeclarations } from '../../src/metrics'
 import { MockDisconnectionReason } from '../mocks/livekit'
 import { AppComponents } from '../../src/types'
