@@ -29,7 +29,7 @@
   "dependencies": {
     "@dcl/core-commons": "^0.10.1",
     "@dcl/eslint-config": "^2.4.3",
-    "@dcl/http-server": "^2.0.2",
+    "@dcl/http-server": "^2.1.0",
     "@dcl/metrics": "^1.0.1",
     "@dcl/pg-component": "^0.2.0",
     "@dcl/protocol": "experimental",
