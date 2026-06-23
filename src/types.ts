@@ -1,13 +1,12 @@
 import type {
   IConfigComponent,
   ILoggerComponent,
-  IHttpServerComponent,
   IBaseComponent,
-  IMetricsComponent,
-  IFetchComponent
+  IMetricsComponent
 } from '@well-known-components/interfaces'
+import type { IHttpServerComponent, IFetchComponent } from '@dcl/core-commons'
 import { metricDeclarations } from './metrics'
-import { IPgComponent } from '@well-known-components/pg-component'
+import { IPgComponent } from '@dcl/pg-component'
 import { IDatabaseComponent } from './adapters/db'
 import { ILivekitComponent } from './adapters/livekit'
 import { IRateLimiterComponent } from './adapters/rate-limiter'

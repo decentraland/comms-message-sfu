@@ -3,12 +3,12 @@ import {
   createServerComponent,
   createStatusCheckComponent,
   instrumentHttpServerWithPromClientRegistry
-} from '@well-known-components/http-server'
+} from '@dcl/http-server'
 import { createLogComponent } from '@well-known-components/logger'
-import { createMetricsComponent } from '@well-known-components/metrics'
+import { createMetricsComponent } from '@dcl/metrics'
 import { AppComponents, GlobalContext } from './types'
 import { metricDeclarations } from './metrics'
-import { createPgComponent } from '@well-known-components/pg-component'
+import { createPgComponent } from '@dcl/pg-component'
 import { createDBComponent } from './adapters/db'
 import { createLivekitComponent } from './adapters/livekit'
 import { createRateLimiterComponent } from './adapters/rate-limiter'
@@ -27,16 +27,6 @@ export async function initComponents(): Promise<AppComponents> {
   const statusChecks = await createStatusCheckComponent({ server, config })
 
   await instrumentHttpServerWithPromClientRegistry({ metrics, server, config, registry: metrics.registry! })
-
-  let databaseUrl: string | undefined = await config.getString('PG_COMPONENT_PSQL_CONNECTION_STRING')
-  if (!databaseUrl) {
-    const dbUser = await config.requireString('PG_COMPONENT_PSQL_USER')
-    const dbDatabaseName = await config.requireString('PG_COMPONENT_PSQL_DATABASE')
-    const dbPort = await config.requireString('PG_COMPONENT_PSQL_PORT')
-    const dbHost = await config.requireString('PG_COMPONENT_PSQL_HOST')
-    const dbPassword = await config.requireString('PG_COMPONENT_PSQL_PASSWORD')
-    databaseUrl = `postgres://${dbUser}:${dbPassword}@${dbHost}:${dbPort}/${dbDatabaseName}`
-  }
 
   const pg = await createPgComponent({ logs, config, metrics })
   const db = await createDBComponent({ pg })

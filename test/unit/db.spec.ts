@@ -1,4 +1,4 @@
-import { IPgComponent } from '@well-known-components/pg-component'
+import { IPgComponent } from '@dcl/pg-component'
 import { createDBComponent, IDatabaseComponent } from '../../src/adapters/db'
 import { createTestPgComponent } from '../mocks/components'
 
@@ -16,7 +16,7 @@ describe('when handling database component', () => {
       const communityId = 'test-community'
       const mockRows = [{ address: '0x123' }, { address: '0x456' }, { address: '0x789' }]
 
-      mockPg.query.mockResolvedValueOnce({ rows: mockRows, rowCount: mockRows.length })
+      mockPg.query.mockResolvedValueOnce({ rows: mockRows, rowCount: mockRows.length, notices: [] })
 
       const members = await db.getCommunityMembers(communityId)
 
@@ -34,7 +34,7 @@ describe('when handling database component', () => {
       const include = ['0x123', '0x456']
       const mockRows = [{ address: '0x123' }, { address: '0x456' }]
 
-      mockPg.query.mockResolvedValueOnce({ rows: mockRows, rowCount: mockRows.length })
+      mockPg.query.mockResolvedValueOnce({ rows: mockRows, rowCount: mockRows.length, notices: [] })
 
       const members = await db.getCommunityMembers(communityId, { include })
 
@@ -52,7 +52,7 @@ describe('when handling database component', () => {
       const exclude = ['0x789']
       const mockRows = [{ address: '0x123' }, { address: '0x456' }]
 
-      mockPg.query.mockResolvedValueOnce({ rows: mockRows, rowCount: mockRows.length })
+      mockPg.query.mockResolvedValueOnce({ rows: mockRows, rowCount: mockRows.length, notices: [] })
 
       const members = await db.getCommunityMembers(communityId, { exclude })
 
@@ -71,7 +71,7 @@ describe('when handling database component', () => {
       const exclude = ['0x789']
       const mockRows = [{ address: '0x123' }, { address: '0x456' }]
 
-      mockPg.query.mockResolvedValueOnce({ rows: mockRows, rowCount: mockRows.length })
+      mockPg.query.mockResolvedValueOnce({ rows: mockRows, rowCount: mockRows.length, notices: [] })
 
       const members = await db.getCommunityMembers(communityId, { include, exclude })
 
@@ -84,7 +84,7 @@ describe('when handling database component', () => {
 
     it('should handle empty result set', async () => {
       const communityId = 'test-community'
-      mockPg.query.mockResolvedValueOnce({ rows: [], rowCount: 0 })
+      mockPg.query.mockResolvedValueOnce({ rows: [], rowCount: 0, notices: [] })
 
       const members = await db.getCommunityMembers(communityId)
       expect(members).toEqual([])
