@@ -1,5 +1,5 @@
 # Not support for Alpine based image: https://github.com/livekit/node-sdks/issues/316
-FROM node:24-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205 AS builderenv
+FROM node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54 AS builderenv
 
 WORKDIR /app
 
@@ -24,7 +24,7 @@ RUN yarn install --prod --frozen-lockfile
 
 ########################## END OF BUILD STAGE ##########################
 
-FROM node:24-slim@sha256:55fb5f5a527ea2c5c4a95f963e48ef90aa38c7b346054fdc8ee9957a2b55d205
+FROM node:24-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54
 
 # Install only the essential runtime dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
